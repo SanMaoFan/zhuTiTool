@@ -7,7 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
 // components
 import HomeBottomTab from './src/pages/HomeBottomTab'
-import Home from './src/pages/Home'
+import Home from './src/pages/ProductManagement'
 import User from './src/pages/User'
 
 // data

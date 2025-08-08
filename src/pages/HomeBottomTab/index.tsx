@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { View, StyleSheet } from 'react-native'
 
 // components
-import Home from '../Home'
+import ProductManagement from '../ProductManagement'
 import User from '../User'
 
 
@@ -13,9 +13,9 @@ export default function HomeBottomTab() {
       const BottomTabNavigationCom = createBottomTabNavigator()
 
       return <View style={styles.container}>
-            <BottomTabNavigationCom.Navigator initialRouteName='Home'>
-                  <BottomTabNavigationCom.Screen name="Home" component={Home} options={{
-                        tabBarLabel: '首页',
+            <BottomTabNavigationCom.Navigator initialRouteName='ProductManagement'>
+                  <BottomTabNavigationCom.Screen name="ProductManagement" component={ProductManagement} options={{
+                        tabBarLabel: '物品管理',
                         headerShown: false
                   }} />
                   <BottomTabNavigationCom.Screen name="User" component={User} options={{

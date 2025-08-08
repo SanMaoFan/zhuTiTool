@@ -1,14 +1,12 @@
 // plugins
-import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity } from 'react-native'
+import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal } from 'react-native'
 import React, { useState, useEffect, ReactNode } from 'react'
 
 // components
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, {
-      SharedValue,
-      useAnimatedStyle,
-} from 'react-native-reanimated';
+import RenderListRightEle from './components/listItemRightActions'
+import HandleRootView from '../../components/HandleRootView'
 
 
 // data
@@ -17,27 +15,23 @@ import {
       WINDOW_HEIGHT
 } from '../../utils'
 
-// 渲染列表右侧按钮
-function RenderListRightEle(prog: SharedValue<number>, drag: SharedValue<number>) {
-      const styleAnimation = useAnimatedStyle(() => {
-            return {
-                  transform: [{ translateX: drag.value + 48 }],
-            }
-      })
-      return <Reanimated.View style={styleAnimation}>
-            <View style={{ height: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: 'red', paddingHorizontal: 10 }}>
-                  <TouchableOpacity>
-                        <Text style={{ color: 'white' }} onPress={() => { console.log(`点击了按钮`) }}>
-                              删除
-                        </Text>
-                  </TouchableOpacity>
-            </View>
-      </Reanimated.View>
-}
 
+
+
+/**
+ * 开发计划
+ * - 完成列表中下拉、上拉刷新功能
+ * - 完善点击分类切换列表功能
+ * - 开发点击列表展示详情功能
+ * - 完善列表删除功能（删除后，怎么恢复数据共条数和分页的关系？）
+ */
 
 export default function Home({ navigation }) {
 
+      // 是否显示loading
+      const [showLoading, setShowLoading] = useState(false)
+      // 是否显示 modal
+      const [showModal, setShowModal] = useState(false)
 
       // 分类列表
       const [assortList, setAssortList] = useState([
@@ -129,6 +123,14 @@ export default function Home({ navigation }) {
 
       return (
             <View style={styles.container}>
+                  {/* 路由跳转 */}
+                  {/* <Button title="点击" onPress={() => navigation.navigate('User')} /> */}
+
+                  {/* loading */}
+                  {showLoading && <View style={styles.loadingEle}>
+                        <ActivityIndicator size='large' animating={true} ></ActivityIndicator>
+                  </View>}
+
 
                   {/* 左侧分类 */}
                   <ScrollView style={styles.assortContainer}>
@@ -140,28 +142,54 @@ export default function Home({ navigation }) {
                               })
                         }
                   </ScrollView>
-                  {/* <Button title="点击" onPress={() => navigation.navigate('User')} /> */}
-                  {/* <Text style={{ backgroundColor: 'red' }}>Home页面</Text> */}
+
 
                   {/* 右侧物品栏 */}
-                  <ScrollView style={styles.productsContainer}>
-                        {
-                              productList.map(item => (<GestureHandlerRootView key={item.key}>
-                                    <ReanimatedSwipeable
-                                          friction={2}
-                                          rightThreshold={20}
-                                          renderRightActions={RenderListRightEle}
+                  <SafeAreaView style={styles.productsContainer}>
+                        <VirtualizedList
+                              renderItem={(info) => {
+                                    // console.log('数据', info)
+                                    return <HandleRootView rootKey={info.item.key}
+                                          ReanimatedSwipeableConfig={{
+                                                friction: 2,
+                                                rightThreshold: 20,
+                                                renderRightActions: RenderListRightEle
+                                          }}
                                     >
-                                          <View style={styles.productItem} key={item.key}>
-                                                <Text style={styles.productItem_text}>{item.name}</Text>
-                                          </View>
-                                    </ReanimatedSwipeable>
-                              </GestureHandlerRootView>))
-                        }
+                                          <TouchableOpacity onPress={() => {
+                                                setShowLoading(true)
+                                                setTimeout(() => {
+                                                      setShowLoading(false)
+                                                      setShowModal(true)
+                                                }, 2000)
+                                          }}>
+                                                <View style={styles.productItem} key={info.item.key}>
+                                                      <Text style={styles.productItem_text}>{info.item.name}</Text>
+                                                </View>
+                                          </TouchableOpacity>
+                                    </HandleRootView>
+                              }}
+                              getItemCount={() => productList.length}
+                              data={productList}
+                              getItem={(data, index) => {
+                                    return {
+                                          name: data[index].name,
+                                          key: data[index].key
+                                    }
+                              }}
+                        />
+                  </SafeAreaView>
 
+                  {/* 弹窗 */}
+                  <Modal animationType='slide'
+                        transparent={false}
+                        visible={showModal}
+                  >
+                        <View>
+                              <Button onPress={() => setShowModal(false)} title='关闭弹窗' />
 
-
-                  </ScrollView>
+                        </View>
+                  </Modal>
 
             </View>
       )
@@ -173,6 +201,18 @@ const styles = StyleSheet.create({
       container: {
             flex: 1,
             flexDirection: 'row'
+      },
+      loadingEle: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.1)'
       },
       assortContainer: {
             width: WINDOW_WIDTH * (3 / 11),
