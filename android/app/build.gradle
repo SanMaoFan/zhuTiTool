@@ -117,3 +117,6 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// 增加 react-native-vector-icons 图标
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

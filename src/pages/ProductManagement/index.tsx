@@ -5,9 +5,9 @@ import React, { useState, useEffect, ReactNode } from 'react'
 // components
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { SpeedDial } from '@rneui/themed'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '../../components/HandleRootView'
-
 
 // data
 import {
@@ -32,6 +32,8 @@ export default function Home({ navigation }) {
       const [showLoading, setShowLoading] = useState(false)
       // 是否显示 modal
       const [showModal, setShowModal] = useState(false)
+      // 浮动按钮是否展开
+      const [openSpeedDial, setOpenSpeedDial] = useState(false)
 
       // 分类列表
       const [assortList, setAssortList] = useState([
@@ -190,6 +192,22 @@ export default function Home({ navigation }) {
 
                         </View>
                   </Modal>
+
+                  {/* 浮动按钮 */}
+                  <SpeedDial
+                        isOpen={openSpeedDial}
+                        icon={{ name: 'edit', color: '#fff' }}
+                        openIcon={{ name: 'close', color: '#fff' }}
+                        onOpen={() => setOpenSpeedDial(!openSpeedDial)}
+                        onClose={() => setOpenSpeedDial(!openSpeedDial)}
+                  >
+                        <SpeedDial.Action
+                              icon={{ name: 'add', color: '#fff' }}
+                              title='新增'
+                              onPress={() => console.log('点击浮动按钮的新增')}
+                        />
+
+                  </SpeedDial>
 
             </View>
       )
