@@ -8,12 +8,18 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import { SpeedDial } from '@rneui/themed'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '../../components/HandleRootView'
+import OperateTypeOrProduct from './components/operateTypeOrProduct'
+
 
 // data
 import {
       WINDOW_WIDTH,
       WINDOW_HEIGHT
 } from '../../utils'
+import {
+      typeData,
+      products
+} from './js/data'
 
 
 
@@ -34,92 +40,25 @@ export default function Home({ navigation }) {
       const [showModal, setShowModal] = useState(false)
       // 浮动按钮是否展开
       const [openSpeedDial, setOpenSpeedDial] = useState(false)
+      // 当前浮动按钮点击的操作类型
+      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'typeManagement' | 'update' | 'details'>('')
 
       // 分类列表
-      const [assortList, setAssortList] = useState([
-            {
-                  name: '测试1',
-                  key: 'test1'
-            }, {
-                  name: '测试2',
-                  key: 'test2'
-            }, {
-                  name: '测试3',
-                  key: 'test3'
-            }, {
-                  name: '测试4',
-                  key: 'test4'
-            }, {
-                  name: '测试5',
-                  key: 'test5'
-            }, {
-                  name: '测试6',
-                  key: 'test6'
-            }, {
-                  name: '测试7',
-                  key: 'test7'
-            }, {
-                  name: '测试8',
-                  key: 'test8'
-            }, {
-                  name: '测试9',
-                  key: 'test9'
-            }, {
-                  name: '测试10',
-                  key: 'test10'
-            }, {
-                  name: '测试11',
-                  key: 'test11'
-            }, {
-                  name: '测试12',
-                  key: 'test12'
-            }, {
-                  name: '测试13',
-                  key: 'test13'
-            }
-      ])
+      const [assortList, setAssortList] = useState(typeData)
 
       // 商品列表
-      const [productList, setProductList] = useState([{
-            name: '测试1',
-            key: 'test1'
-      }, {
-            name: '测试2',
-            key: 'test2'
-      }, {
-            name: '测试3',
-            key: 'test3'
-      }, {
-            name: '测试4',
-            key: 'test4'
-      }, {
-            name: '测试5',
-            key: 'test5'
-      }, {
-            name: '测试6',
-            key: 'test6'
-      }, {
-            name: '测试7',
-            key: 'test7'
-      }, {
-            name: '测试8',
-            key: 'test8'
-      }, {
-            name: '测试9',
-            key: 'test9'
-      }, {
-            name: '测试10',
-            key: 'test10'
-      }, {
-            name: '测试11',
-            key: 'test11'
-      }, {
-            name: '测试12',
-            key: 'test12'
-      }, {
-            name: '测试13',
-            key: 'test13'
-      }])
+      const [productList, setProductList] = useState(products)
+
+
+
+
+      // function
+      // 点击操作浮动按钮
+      function clickSpeedDialAction(type: string) {
+            setCurOperationType(type)
+            setShowModal(true)
+            setOpenSpeedDial(false)
+      }
 
 
 
@@ -166,7 +105,7 @@ export default function Home({ navigation }) {
                                                 }, 2000)
                                           }}>
                                                 <View style={styles.productItem} key={info.item.key}>
-                                                      <Text style={styles.productItem_text}>{info.item.name}</Text>
+                                                      <Text style={styles.productItemText}>{info.item.name}</Text>
                                                 </View>
                                           </TouchableOpacity>
                                     </HandleRootView>
@@ -186,11 +125,21 @@ export default function Home({ navigation }) {
                   <Modal animationType='slide'
                         transparent={false}
                         visible={showModal}
+                        onRequestClose={() => setShowModal(false)}
                   >
-                        <View>
-                              <Button onPress={() => setShowModal(false)} title='关闭弹窗' />
+                        <View style={styles.modalTextView}>
+                              <Text style={styles.modalTitle}>{'add' === curOperationType ? '新增' : ['update', 'typeManagement'].includes(curOperationType) ? '编辑' : 'details' === curOperationType ? '详情' : ''}</Text>
 
                         </View>
+                        <View>
+                              {
+                                    'add' === curOperationType ? <OperateTypeOrProduct setShowModal={setShowModal}></OperateTypeOrProduct>
+                                          : <></>
+                              }
+
+                        </View>
+                        {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
+
                   </Modal>
 
                   {/* 浮动按钮 */}
@@ -204,7 +153,15 @@ export default function Home({ navigation }) {
                         <SpeedDial.Action
                               icon={{ name: 'add', color: '#fff' }}
                               title='新增'
-                              onPress={() => console.log('点击浮动按钮的新增')}
+                              onPress={() => clickSpeedDialAction('add')}
+
+                        />
+                        <SpeedDial.Action
+                              icon={{ name: 'ProductOutlined', type: 'antdesign', color: '#fff' }}
+
+                              title='分类管理'
+                              onPress={() => clickSpeedDialAction('typeManagement')}
+
                         />
 
                   </SpeedDial>
@@ -264,8 +221,16 @@ const styles = StyleSheet.create({
             justifyContent: 'center',
             alignItems: 'center'
       },
-      'productItem_text': {
+      productItemText: {
             fontSize: 18,
 
+      },
+      modalTextView: {
+            padding: 20
+
+      },
+      modalTitle: {
+            fontSize: 20,
+            fontWeight: '400'
       }
 })
