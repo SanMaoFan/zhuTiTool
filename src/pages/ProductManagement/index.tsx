@@ -131,13 +131,10 @@ export default function Home({ navigation }) {
                               <Text style={styles.modalTitle}>{'add' === curOperationType ? '新增' : ['update', 'typeManagement'].includes(curOperationType) ? '编辑' : 'details' === curOperationType ? '详情' : ''}</Text>
 
                         </View>
-                        <View>
-                              {
-                                    'add' === curOperationType ? <OperateTypeOrProduct setShowModal={setShowModal}></OperateTypeOrProduct>
-                                          : <></>
-                              }
-
-                        </View>
+                        {
+                              'add' === curOperationType ? <OperateTypeOrProduct setShowModal={setShowModal}></OperateTypeOrProduct>
+                                    : <></>
+                        }
                         {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
 
                   </Modal>
@@ -226,11 +223,15 @@ const styles = StyleSheet.create({
 
       },
       modalTextView: {
-            padding: 20
 
       },
       modalTitle: {
-            fontSize: 20,
-            fontWeight: '400'
+            paddingVertical: 20,
+            paddingHorizontal: 10,
+            fontSize: 24,
+            fontWeight: '500',
+            color: 'white',
+            backgroundColor: '#257BB1'
+
       }
 })
