@@ -1,11 +1,11 @@
 // plugins
-import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal } from 'react-native'
 import React, { useState, useEffect, ReactNode } from 'react'
 
 // components
+import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { SpeedDial } from '@rneui/themed'
+import { SpeedDial, Dialog } from '@rneui/themed'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '../../components/HandleRootView'
 import OperateTypeOrProduct from './components/operateTypeOrProduct'
@@ -49,6 +49,12 @@ export default function Home({ navigation }) {
       // 商品列表
       const [productList, setProductList] = useState(products)
 
+      // 当前 dialog 作用的类型
+      const [curDialogType, setCurDialogType] = useState<string>('')
+      // 确认删除的弹窗
+      const [showDelDialog, setShowDelDialog] = useState<boolean>(false)
+      // 当前删除的物品 id
+      const [curDelId, setCurDelId] = useState<string>('')
 
 
 
@@ -58,6 +64,30 @@ export default function Home({ navigation }) {
             setCurOperationType(type)
             setShowModal(true)
             setOpenSpeedDial(false)
+      }
+
+      // 设置 dialog
+      function setDialog(type: string, id: string) {
+            switch (type) {
+                  case 'del':
+                        setCurDialogType('del')
+                        setShowDelDialog(true)
+                        setCurDelId(id)
+                        break
+            }
+      }
+
+      // 重置 dialog
+      function resetDialog() {
+            setShowDelDialog(false)
+            setCurDelId('')
+      }
+
+      // 删除物品
+      function handleDelProduct() {
+            const id = curDelId
+            console.log('要删除的id', id)
+            resetDialog()
       }
 
 
@@ -94,7 +124,7 @@ export default function Home({ navigation }) {
                                           ReanimatedSwipeableConfig={{
                                                 friction: 2,
                                                 rightThreshold: 20,
-                                                renderRightActions: RenderListRightEle
+                                                renderRightActions: (...item) => RenderListRightEle(setDialog, info.item.key, ...item)
                                           }}
                                     >
                                           <TouchableOpacity onPress={() => {
@@ -121,7 +151,7 @@ export default function Home({ navigation }) {
                         />
                   </SafeAreaView>
 
-                  {/* 弹窗 */}
+                  {/* 弹窗 -- 新增、物品编辑  */}
                   <Modal animationType='slide'
                         transparent={false}
                         visible={showModal}
@@ -162,6 +192,28 @@ export default function Home({ navigation }) {
                         />
 
                   </SpeedDial>
+
+                  {/* 确认删除弹窗 */}
+                  <Dialog
+                        isVisible={showDelDialog}
+                        onBackdropPress={resetDialog}
+                  >
+                        <Dialog.Title title={'del' === curDialogType ? '确认删除吗？' : ''} />
+                        <View><Text>删除这里的东西</Text></View>
+                        <Dialog.Actions>
+                              <Dialog.Button title="确定" onPress={() => {
+                                    console.log('删除', curDelId)
+                                    handleDelProduct()
+
+
+                              }}></Dialog.Button>
+                              <Dialog.Button title="取消" onPress={() => {
+                                    console.log('取消删除')
+                                    resetDialog()
+                              }}></Dialog.Button>
+
+                        </Dialog.Actions>
+                  </Dialog>
 
             </View>
       )
