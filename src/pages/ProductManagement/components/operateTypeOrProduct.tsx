@@ -1,5 +1,5 @@
 // plugins
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 // components
 import { View, SafeAreaView, ScrollView, Text, StyleSheet, Button, Dimensions, TextInput } from 'react-native'
@@ -10,24 +10,45 @@ import { Picker } from '@react-native-picker/picker'
 
 interface Props {
       setShowModal: (show: boolean) => void
-      curOperationType: string
+      type: string
+      id: string
 }
 
 
 // 操作类型或商品
 export default function OperateTypeOrProduct({
       setShowModal,
-      curOperationType
+      type,
+      id
 }: Props) {
+
+      // ref
+      const JFormRef = useRef(null)
 
       // state
       // 分类数据
       const [typeList, setTypeList] = useState([])
+      // 是否禁用类型选择
+      const [isTypeDisabled, setIsTypeDisabled] = useState(() => {
+            return ['update', 'typeManagement'].includes(type)
+      })
 
       // function
       // 请求分类数据
-      function getTypeList() {
-
+      function getInfo() {
+            switch (type) {
+                  // 请求物品数据
+                  case 'update':
+                        break
+                  // 请求分类数据
+                  case 'typeManagement':
+                        break
+            }
+            // 设置数据
+            JFormRef.current?.setValues({
+                  type: 'update' === type ? 'product' : 'typeManagement' === type ? 'type' : '',
+                  name: '2', typeItem: 'py', descriptions: '6666'
+            })
       }
       // 提交表单
       function handleSubmitForm(values: any) {
@@ -36,12 +57,17 @@ export default function OperateTypeOrProduct({
       }
 
       // useEffect
+      useEffect(() => {
+            getInfo()
+      }, [])
 
       return (
             <ScrollView style={styles.container}>
 
                   {/* 表单内容 */}
-                  <Formik initialValues={{ type: 'type', name: '', typeItem: '', descriptions: '' }}
+                  <Formik
+                        innerRef={JFormRef}
+                        initialValues={{ type: '', name: '', typeItem: '', descriptions: '' }}
                         onSubmit={handleSubmitForm}
                   >
                         {
@@ -51,7 +77,7 @@ export default function OperateTypeOrProduct({
                                           <View style={styles.formItem}>
                                                 <View >
                                                       <Text style={styles.formItemTitle}>
-                                                            新增类型
+                                                            选择类型
                                                       </Text>
                                                 </View>
                                                 <View style={styles.formItemCheckbox}>
@@ -63,7 +89,7 @@ export default function OperateTypeOrProduct({
                                                             }}
                                                             checkedIcon="dot-circle-o"
                                                             uncheckedIcon="circle-o"
-                                                            disabled={'edit' === curOperationType}
+                                                            disabled={isTypeDisabled}
                                                       ></CheckBox>
                                                       <CheckBox
                                                             title="物品"
@@ -73,7 +99,7 @@ export default function OperateTypeOrProduct({
                                                             }}
                                                             checkedIcon="dot-circle-o"
                                                             uncheckedIcon="circle-o"
-                                                            disabled={'edit' === curOperationType}
+                                                            disabled={isTypeDisabled}
                                                       ></CheckBox>
                                                 </View>
 
@@ -147,6 +173,7 @@ export default function OperateTypeOrProduct({
                                                                   editable
                                                                   multiline
                                                                   numberOfLines={6}
+                                                                  rows={6}
                                                                   maxLength={60}
                                                                   onChangeText={handleChange('descriptions')}
                                                                   value={values.descriptions}
@@ -206,7 +233,7 @@ const styles = StyleSheet.create({
             marginVertical: 10,
             marginHorizontal: 10,
             borderRadius: 5,
-
+            textAlignVertical: 'top'
       },
       closeBtn: {
             paddingVertical: 20

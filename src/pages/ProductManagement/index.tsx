@@ -54,7 +54,7 @@ export default function Home({ navigation }) {
       // 确认删除的弹窗
       const [showDelDialog, setShowDelDialog] = useState<boolean>(false)
       // 当前删除的物品 id
-      const [curDelId, setCurDelId] = useState<string>('')
+      const [curEditId, setCurEditId] = useState<string>('')
 
 
 
@@ -72,20 +72,24 @@ export default function Home({ navigation }) {
                   case 'del':
                         setCurDialogType('del')
                         setShowDelDialog(true)
-                        setCurDelId(id)
+                        break
+                  case 'update':
+                        setCurOperationType('update')
+                        setShowModal(true)
                         break
             }
+            setCurEditId(id)
       }
 
       // 重置 dialog
       function resetDialog() {
             setShowDelDialog(false)
-            setCurDelId('')
+            setCurEditId('')
       }
 
       // 删除物品
       function handleDelProduct() {
-            const id = curDelId
+            const id = curEditId
             console.log('要删除的id', id)
             resetDialog()
       }
@@ -162,7 +166,9 @@ export default function Home({ navigation }) {
 
                         </View>
                         {
-                              'add' === curOperationType ? <OperateTypeOrProduct setShowModal={setShowModal}></OperateTypeOrProduct>
+                              ['add', 'update', 'typeManagement'].includes(curOperationType) ? <OperateTypeOrProduct setShowModal={setShowModal} type={curOperationType}
+                                    id={curEditId}
+                              ></OperateTypeOrProduct>
                                     : <></>
                         }
                         {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
@@ -202,7 +208,7 @@ export default function Home({ navigation }) {
                         <View><Text>删除这里的东西</Text></View>
                         <Dialog.Actions>
                               <Dialog.Button title="确定" onPress={() => {
-                                    console.log('删除', curDelId)
+                                    console.log('删除', curEditId)
                                     handleDelProduct()
 
 

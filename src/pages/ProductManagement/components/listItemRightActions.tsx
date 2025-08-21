@@ -27,6 +27,7 @@ export default function RenderListRightEle(
             <View style={styles.rightActionsContainer}>
                   <View style={[styles.actionItem, styles.updateBtn]}>
                         <Text style={styles.rightActionsText} onPress={() => {
+                              setDialog('update', id)
                               console.log(`点击了编辑按钮`);
                               swipeableMethods.close()
                         }}>
