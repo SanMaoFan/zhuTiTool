@@ -1,14 +1,16 @@
 // plugins
 import React, { useState, useEffect, ReactNode } from 'react'
 
+
 // components
-import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal } from 'react-native'
+import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { SpeedDial, Dialog } from '@rneui/themed'
+import { SpeedDial, Dialog, Icon } from '@rneui/themed'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '../../components/HandleRootView'
 import OperateTypeOrProduct from './components/operateTypeOrProduct'
+import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 
 
 // data
@@ -20,6 +22,7 @@ import {
       typeData,
       products
 } from './js/data'
+import { IconNode } from '@rneui/base';
 
 
 
@@ -33,6 +36,7 @@ import {
  */
 
 export default function Home({ navigation }) {
+
 
       // 是否显示loading
       const [showLoading, setShowLoading] = useState(false)
@@ -111,9 +115,33 @@ export default function Home({ navigation }) {
                   <ScrollView style={styles.assortContainer}>
                         {
                               assortList.map(item => {
-                                    return <View style={styles.assortItem} key={item.key}>
-                                          <Text>{item.name}</Text>
-                                    </View>
+                                    return <TouchableOpacity
+                                          key={item.key}
+                                          style={styles.assortItem}
+                                          onPress={() => {
+                                                console.log('点击了', item.name)
+                                          }}
+                                    >
+
+                                          {/* <Pressable
+                                          delayLongPress={1000}
+                                          pressRetentionOffset={{ bottom: 30, left: 20, right: 20, top: 20 }}
+                                          android_ripple={{ color: 'black', borderless: true, radius: 50 }}
+                                          onPress={() => {
+                                                console.log('点击了', item.name)
+                                          }}
+                                          onLongPress={() => {
+                                                setCurEditId(item.key)
+                                                console.log('长按了', item.name)
+                                          }}
+                                    > */}
+                                          <View>
+
+                                                <Text>{item.name}</Text>
+                                          </View>
+                                          {/* </Pressable> */}
+                                    </TouchableOpacity>
+
                               })
                         }
                   </ScrollView>
@@ -138,9 +166,11 @@ export default function Home({ navigation }) {
                                                       setShowModal(true)
                                                 }, 2000)
                                           }}>
+
                                                 <View style={styles.productItem} key={info.item.key}>
                                                       <Text style={styles.productItemText}>{info.item.name}</Text>
                                                 </View>
+
                                           </TouchableOpacity>
                                     </HandleRootView>
                               }}
@@ -184,13 +214,25 @@ export default function Home({ navigation }) {
                         onClose={() => setOpenSpeedDial(!openSpeedDial)}
                   >
                         <SpeedDial.Action
-                              icon={{ name: 'add', color: '#fff' }}
+                              icon={(): () => IconNode => {
+                                    return <AntDesignIcon
+                                          name='plus'
+                                          size={20}
+                                          color='#fff'
+                                    />
+                              }}
                               title='新增'
                               onPress={() => clickSpeedDialAction('add')}
 
                         />
                         <SpeedDial.Action
-                              icon={{ name: 'ProductOutlined', type: 'antdesign', color: '#fff' }}
+                              icon={(): () => IconNode => {
+                                    return <AntDesignIcon
+                                          name='appstore-o'
+                                          size={20}
+                                          color='#fff'
+                                    />
+                              }}
 
                               title='分类管理'
                               onPress={() => clickSpeedDialAction('typeManagement')}
@@ -291,5 +333,8 @@ const styles = StyleSheet.create({
             color: 'white',
             backgroundColor: '#257BB1'
 
+      },
+      fabIconItem: {
+            fontSize: 10
       }
 })

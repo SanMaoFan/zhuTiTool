@@ -17,3 +17,8 @@ v18.19.1
   Reanimated（react-native-reanimated）
   来做滑动条时，会提示：cannot read property makemutable of undefined，当前按解决方案来做：https://github.com/software-mansion/react-native-reanimated/discussions/5511
   具体版本为： "react-native-gesture-handler": "^2.16.2", "react-native-reanimated": "3.18.0"。
+
+## 开发计划
+
+- 给分类添加编辑功能
+- 给删除弹窗加入动画
