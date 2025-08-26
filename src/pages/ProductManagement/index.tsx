@@ -235,7 +235,10 @@ export default function Home({ navigation }) {
                               }}
 
                               title='分类管理'
-                              onPress={() => clickSpeedDialAction('typeManagement')}
+                              onPress={() => {
+                                    navigation.navigate('TypeManagement')
+                                    // clickSpeedDialAction('typeManagement')
+                              }}
 
                         />
 

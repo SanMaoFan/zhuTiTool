@@ -6,7 +6,7 @@ import { View, StyleSheet } from 'react-native'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import Feather from 'react-native-vector-icons/Feather'
 
-import ProductManagement from '../ProductManagement'
+import ProductManagementRouter from '../ProductManagementRouter'
 import User from '../User'
 
 
@@ -33,8 +33,8 @@ export default function HomeBottomTab() {
       // 导航渲染
       const tabBarRenderData = [
             {
-                  name: "ProductManagement",
-                  component: ProductManagement,
+                  name: "ProductManagementRouter",
+                  component: ProductManagementRouter,
                   options: {
                         tabBarLabel: '物品管理',
                         tabBarLabelStyle: tabBarLabelStylePublish,
@@ -66,7 +66,7 @@ export default function HomeBottomTab() {
       const BottomTabNavigationCom = createBottomTabNavigator()
 
       return <View style={styles.container}>
-            <BottomTabNavigationCom.Navigator initialRouteName='ProductManagement'>
+            <BottomTabNavigationCom.Navigator initialRouteName='ProductManagementRouter'>
                   {
                         tabBarRenderData.map(item => {
                               return <BottomTabNavigationCom.Screen {...item} key={item.name} />
