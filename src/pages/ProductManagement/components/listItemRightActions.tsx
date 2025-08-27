@@ -25,24 +25,24 @@ export default function RenderListRightEle(
       return <Reanimated.View style={styleAnimation}>
             {/* 按钮 */}
             <View style={styles.rightActionsContainer}>
-                  <View style={[styles.actionItem, styles.updateBtn]}>
-                        <Text style={styles.rightActionsText} onPress={() => {
-                              setDialog('update', id)
-                              console.log(`点击了编辑按钮`);
-                              swipeableMethods.close()
-                        }}>
+                  <TouchableOpacity style={[styles.actionItem, styles.updateBtn]} onPress={() => {
+                        setDialog('update', id)
+                        console.log(`点击了编辑按钮`);
+                        swipeableMethods.close()
+                  }}>
+                        <Text style={styles.rightActionsText}>
                               编辑
                         </Text>
-                  </View>
-                  <View style={[styles.actionItem, styles.delBtn]}>
-                        <Text style={styles.rightActionsText} onPress={() => {
-                              setDialog('del', id)
-                              console.log(`点击了删除按钮`);
-                              swipeableMethods.close()
-                        }}>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionItem, styles.delBtn]} onPress={() => {
+                        setDialog('del', id)
+                        console.log(`点击了删除按钮`);
+                        swipeableMethods.close()
+                  }}>
+                        <Text style={styles.rightActionsText}>
                               删除
                         </Text>
-                  </View>
+                  </TouchableOpacity>
             </View>
             {/* 删除提示窗 */}
 
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
             flexDirection: 'row',
             justifyContent: 'center',
             alignItems: 'stretch',
-            height: 50,
+            height: '100%',
             paddingHorizontal: 10,
       },
       actionItem: {

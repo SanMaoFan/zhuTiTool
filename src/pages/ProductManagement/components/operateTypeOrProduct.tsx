@@ -166,7 +166,7 @@ export default function OperateTypeOrProduct({
                                                       <View style={styles.formItem}>
                                                             <View >
                                                                   <Text style={styles.formItemTitle}>
-                                                                        简介
+                                                                        物品简介
                                                                   </Text>
                                                             </View>
                                                             <TextInput

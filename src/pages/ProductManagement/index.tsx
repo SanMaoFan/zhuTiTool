@@ -8,10 +8,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SpeedDial, Dialog, Icon } from '@rneui/themed'
 import RenderListRightEle from './components/listItemRightActions'
-import HandleRootView from '../../components/HandleRootView'
+import HandleRootView from '@/components/HandleRootView'
 import OperateTypeOrProduct from './components/operateTypeOrProduct'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 
+// style
+import commonStyles from '@/common/styles'
+import { basicBackgroundColor } from '@/common/styles'
 
 // data
 import {
@@ -23,6 +26,7 @@ import {
       products
 } from './js/data'
 import { IconNode } from '@rneui/base';
+
 
 
 
@@ -208,6 +212,7 @@ export default function Home({ navigation }) {
                   {/* 浮动按钮 */}
                   <SpeedDial
                         isOpen={openSpeedDial}
+                        color={basicBackgroundColor}
                         icon={{ name: 'edit', color: '#fff' }}
                         openIcon={{ name: 'close', color: '#fff' }}
                         onOpen={() => setOpenSpeedDial(!openSpeedDial)}
@@ -221,6 +226,7 @@ export default function Home({ navigation }) {
                                           color='#fff'
                                     />
                               }}
+                              color={basicBackgroundColor}
                               title='新增'
                               onPress={() => clickSpeedDialAction('add')}
 
@@ -233,10 +239,11 @@ export default function Home({ navigation }) {
                                           color='#fff'
                                     />
                               }}
-
+                              color={basicBackgroundColor}
                               title='分类管理'
                               onPress={() => {
                                     navigation.navigate('TypeManagement')
+                                    setOpenSpeedDial(false)
                                     // clickSpeedDialAction('typeManagement')
                               }}
 
