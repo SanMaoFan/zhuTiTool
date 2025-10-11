@@ -22,10 +22,13 @@ import {
       WINDOW_HEIGHT
 } from '../../utils'
 import {
-      typeData,
       products
 } from './js/data'
 import { IconNode } from '@rneui/base';
+
+// api
+import { getTypeList } from '@/api/type'
+import { getProductList } from '@/api/product'
 
 
 
@@ -52,10 +55,12 @@ export default function Home({ navigation }) {
       const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'typeManagement' | 'update' | 'details'>('')
 
       // 分类列表
-      const [assortList, setAssortList] = useState(typeData)
+      const [assortList, setAssortList] = useState([])
 
       // 商品列表
       const [productList, setProductList] = useState(products)
+      // 商品列表分页
+      const [curProductPage, setProductPage] = useState(1)
 
       // 当前 dialog 作用的类型
       const [curDialogType, setCurDialogType] = useState<string>('')
@@ -67,6 +72,32 @@ export default function Home({ navigation }) {
 
 
       // function
+      // 获取分类
+      async function getTypeListFn(callback: () => void) {
+            setShowLoading(true)
+            const { data: { list }, status } = await getTypeList({ params: {} })
+            setShowLoading(false)
+            // console.log('getTypeListFn request data:',list, status)
+            if (200 === status) {
+                  setAssortList([...list])
+                  callback?.()
+            } else {
+
+            }
+      }
+
+      // 获取物品
+      async function getProudctListFn(searchParams) {
+            setShowLoading(true)
+            const { data: { list }, status } = await getProductList(searchParams)
+            setShowLoading(false)
+            if (200 === status) {
+                  setProductList([...list])
+            } else {
+
+            }
+      }
+
       // 点击操作浮动按钮
       function clickSpeedDialAction(type: string) {
             setCurOperationType(type)
@@ -95,12 +126,27 @@ export default function Home({ navigation }) {
             setCurEditId('')
       }
 
+      // 查询物品
+      function clickTypeItem(id) {
+            setProductPage(1)
+            getProudctListFn({ typeId: id })
+      }
+
       // 删除物品
       function handleDelProduct() {
             const id = curEditId
             console.log('要删除的id', id)
             resetDialog()
       }
+
+
+      // effect
+      useEffect(() => {
+            getTypeListFn(function () {
+                  setProductPage(1)
+                  getProudctListFn({})
+            })
+      }, [])
 
 
 
@@ -120,11 +166,9 @@ export default function Home({ navigation }) {
                         {
                               assortList.map(item => {
                                     return <TouchableOpacity
-                                          key={item.key}
+                                          key={item.typeId}
                                           style={styles.assortItem}
-                                          onPress={() => {
-                                                console.log('点击了', item.name)
-                                          }}
+                                          onPress={() => clickTypeItem(item.typeId)}
                                     >
 
                                           {/* <Pressable
@@ -141,7 +185,7 @@ export default function Home({ navigation }) {
                                     > */}
                                           <View>
 
-                                                <Text>{item.name}</Text>
+                                                <Text>{item.typeName}</Text>
                                           </View>
                                           {/* </Pressable> */}
                                     </TouchableOpacity>
