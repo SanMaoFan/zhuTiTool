@@ -1,58 +1,155 @@
 // plugins
 import { useState, useRef, useEffect } from 'react'
+import { useNavigation } from '@react-navigation/native'
 
 // components
-import { View, SafeAreaView, ScrollView, Text, StyleSheet, Button, Dimensions, TextInput } from 'react-native'
+import { View, SafeAreaView, ScrollView, Text, StyleSheet, Button, Dimensions, TextInput, ToastAndroid } from 'react-native'
 import { Tab, TabView, Icon, Input, CheckBox } from '@rneui/themed'
 import { Formik } from 'formik'
 import { Picker } from '@react-native-picker/picker'
+import LoadingEle from '@/components/LoadingEle'
+
+// api
+import { getTypeList, addTypeItem, updateTypeItem } from '@/api/type'
+import { getProductInfo, addProductItem, updateProductItem } from '@/api/product'
 
 
 interface Props {
       setShowModal: (show: boolean) => void
+      resetRequest: () => void
       type: string
       id: string
 }
 
+interface FormValues {
+      descriptions?: string
+      name: string
+      type: 'type' | 'product'
+      typeItem?: string
+}
+
 
 // 操作类型或商品
+// type 分为： updateProduct, updateType, add 分别代表 编辑物品、编辑分类、新增
 export default function OperateTypeOrProduct({
       setShowModal,
-      type,
+      resetRequest,
+      type: curDialogType,
       id
 }: Props) {
+
+      // navigation
+      const navigation = useNavigation()
 
       // ref
       const JFormRef = useRef(null)
 
       // state
+      // loading
+      const [showLoading, setShowLoading] = useState(false)
       // 分类数据
       const [typeList, setTypeList] = useState([])
       // 是否禁用类型选择
       const [isTypeDisabled, setIsTypeDisabled] = useState(() => {
-            return ['update', 'typeManagement'].includes(type)
+            return ['updateProduct', 'updateType'].includes(curDialogType)
       })
 
+      // 当前要改动的物品 id
+      const [curEditId, setEditId] = useState<null | string>(null)
+
       // function
-      // 请求分类数据
-      function getInfo() {
-            switch (type) {
-                  // 请求物品数据
-                  case 'update':
-                        break
-                  // 请求分类数据
-                  case 'typeManagement':
-                        break
+      // 请求数据
+      async function getInfo() {
+            try {
+                  // console.log('当前类型和数据：', type, id)
+                  setShowLoading(true)
+                  setEditId(id || null)
+                  let name, descriptions, typeItem
+                  switch (curDialogType) {
+                        // 请求物品详情、分类列表
+                        case 'updateProduct':
+                              const { data, status: productResultStatus } = await getProductInfo({ id })
+                              if (200 === productResultStatus) {
+                                    const { parentId, productDescript, productName } = data
+                                    name = productName
+                                    descriptions = productDescript
+                                    typeItem = parentId
+                              } else {
+                                    ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                              }
+                              // 请求分类数据
+                              const { data: { list }, status: typeResultStatus } = await getTypeList({ pageNo: 100 })
+                              if (200 === typeResultStatus) {
+                                    // console.log('分类数据列表, ', list)
+                                    setTypeList(() => {
+                                          return list.map(item => {
+                                                return {
+                                                      value: item.typeId,
+                                                      name: item.typeName
+                                                }
+                                          })
+                                    })
+                              } else {
+                                    ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                              }
+                              break
+                        // 请求分类详情
+                        case 'updateType':
+                              break
+                  }
+                  // 设置数据
+                  JFormRef.current?.setValues({
+                        type: 'updateProduct' === curDialogType ? 'product' : 'updateType' === curDialogType ? 'type' : 'type',
+                        name, typeItem, descriptions
+                  })
+            } catch (e) {
+                  console.log('getInfo error: ', e)
+                  ToastAndroid.showWithGravity('提交失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
+            } finally {
+                  setShowLoading(false)
             }
-            // 设置数据
-            JFormRef.current?.setValues({
-                  type: 'update' === type ? 'product' : 'typeManagement' === type ? 'type' : '',
-                  name: '2', typeItem: 'py', descriptions: '6666'
-            })
+
       }
       // 提交表单
-      function handleSubmitForm(values: any) {
-            console.log('提交的数据', values)
+      async function handleSubmitForm(values: FormValues) {
+            try {
+                  setShowLoading(true)
+                  let objParams = {}
+                  let requestFn = ('updateProduct' === curDialogType) ? updateProductItem : ('updateType' === curDialogType) ? updateTypeItem : ('add' === curDialogType ? ('type' === values.type ? addTypeItem : addProductItem) : '')
+                  const { descriptions,
+                        name,
+                        type = 'type',
+                        typeItem } = values
+                  if ('type' === type) {
+                        objParams = Object.assign({
+                              name,
+                              descript: descriptions
+                        }, 'updateType' === curDialogType && {
+                              id: curEditId
+                        })
+                  } else {
+                        objParams = Object.assign({
+                              name,
+                              descript: descriptions,
+                              parentId: typeItem
+                        }, 'updateProduct' === curDialogType && {
+                              id: curEditId
+                        })
+                  }
+                  const { status } = await requestFn(objParams)
+                  if (200 === status) {
+                        ToastAndroid.showWithGravity((['updateProduct', 'updateType'].includes(curDialogType) ? '修改' : '新增') + '成功！', ToastAndroid.SHORT, ToastAndroid.TOP)
+                        resetRequest()
+                  } else {
+                        ToastAndroid.showWithGravity('请求失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  }
+            } catch (e) {
+                  console.log("submit form error: ", e)
+                  ToastAndroid.showWithGravity('提交失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
+            } finally {
+                  setShowLoading(false)
+            }
+
 
       }
 
@@ -61,8 +158,11 @@ export default function OperateTypeOrProduct({
             getInfo()
       }, [])
 
+
       return (
             <ScrollView style={styles.container}>
+                  {/* loading */}
+                  <LoadingEle loading={showLoading}></LoadingEle>
 
                   {/* 表单内容 */}
                   <Formik
@@ -135,55 +235,36 @@ export default function OperateTypeOrProduct({
                                                                         handleChange('typeItem')(itemValue)
                                                                   }}
                                                             >
-                                                                  {/* {
+                                                                  {
                                                                         typeList.map((item: { name: string, value: string }, index) => {
                                                                               return <Picker.Item label={item.name} value={item.value} key={item.value} />
                                                                         })
-                                                                  } */}
-
-                                                                  <Picker.Item label="JavaScript" value="js" />
-                                                                  <Picker.Item label="Python" value="py" />
-                                                                  <Picker.Item label="Kotlin" value="kt" />
-                                                                  <Picker.Item label="Swift" value="swift" />
-                                                                  <Picker.Item label="Objective-C" value="objc" />
-                                                                  <Picker.Item label="Java" value="java1" />
-                                                                  <Picker.Item label="JavaScript" value="js1" />
-                                                                  <Picker.Item label="Python" value="py1" />
-                                                                  <Picker.Item label="Kotlin" value="kt1" />
-                                                                  <Picker.Item label="Swift" value="swift1" />
-                                                                  <Picker.Item label="Objective-C" value="objc1" />
-                                                                  <Picker.Item label="JavaScript" value="js12" />
-                                                                  <Picker.Item label="Python" value="py12" />
-                                                                  <Picker.Item label="Kotlin" value="kt12" />
-                                                                  <Picker.Item label="Swift" value="swift12" />
-                                                                  <Picker.Item label="Objective-C" value="objc12" />
-
-
-
+                                                                  }
                                                             </Picker>
                                                       </View>
-                                                      {/* 简介 -- 物品 */}
-                                                      <View style={styles.formItem}>
-                                                            <View >
-                                                                  <Text style={styles.formItemTitle}>
-                                                                        物品简介
-                                                                  </Text>
-                                                            </View>
-                                                            <TextInput
-                                                                  editable
-                                                                  multiline
-                                                                  numberOfLines={6}
-                                                                  rows={6}
-                                                                  maxLength={60}
-                                                                  onChangeText={handleChange('descriptions')}
-                                                                  value={values.descriptions}
-                                                                  placeholder='请输入简介'
-                                                                  style={styles.formTextarea}
-                                                            ></TextInput>
 
-                                                      </View>
                                                 </>
                                           }
+                                          {/* 简介 -- 物品 */}
+                                          <View style={styles.formItem}>
+                                                <View >
+                                                      <Text style={styles.formItemTitle}>
+                                                            {'product' === values.type ? "物品" : "分类"}简介
+                                                      </Text>
+                                                </View>
+                                                <TextInput
+                                                      editable
+                                                      multiline
+                                                      numberOfLines={6}
+                                                      rows={6}
+                                                      maxLength={100}
+                                                      onChangeText={handleChange('descriptions')}
+                                                      value={values.descriptions}
+                                                      placeholder='请输入简介'
+                                                      style={styles.formTextarea}
+                                                ></TextInput>
+
+                                          </View>
 
 
                                           <Button title="提交" onPress
@@ -192,13 +273,6 @@ export default function OperateTypeOrProduct({
                               )
                         }
                   </Formik>
-
-
-
-
-                  {/* <View style={[styles.closeBtn]} >
-                        <Button onPress={() => setShowModal(false)} title='关闭弹窗' />
-                  </View> */}
 
 
             </ScrollView>
@@ -213,6 +287,7 @@ const styles = StyleSheet.create({
 
       },
       formItem: {
+            marginBottom: 16,
       },
       formItemTitle: {
             fontSize: 18,

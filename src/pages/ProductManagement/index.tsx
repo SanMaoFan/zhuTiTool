@@ -7,10 +7,11 @@ import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacit
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SpeedDial, Dialog, Icon } from '@rneui/themed'
+import AntDesignIcon from 'react-native-vector-icons/AntDesign'
+import LoadingEle from '@/components/LoadingEle'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '@/components/HandleRootView'
 import OperateTypeOrProduct from './components/operateTypeOrProduct'
-import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 
 // style
 import commonStyles from '@/common/styles'
@@ -21,14 +22,17 @@ import {
       WINDOW_WIDTH,
       WINDOW_HEIGHT
 } from '../../utils'
-import {
-      products
-} from './js/data'
+// import {
+
+// } from './js/data'
 import { IconNode } from '@rneui/base';
 
 // api
 import { getTypeList } from '@/api/type'
-import { getProductList } from '@/api/product'
+import { getProductList, delProductItem } from '@/api/product'
+
+// interface 
+import { type typeInterface, type productInterface } from './js/data'
 
 
 
@@ -52,15 +56,19 @@ export default function Home({ navigation }) {
       // 浮动按钮是否展开
       const [openSpeedDial, setOpenSpeedDial] = useState(false)
       // 当前浮动按钮点击的操作类型
-      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'typeManagement' | 'update' | 'details'>('')
+      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
 
       // 分类列表
-      const [assortList, setAssortList] = useState([])
+      const [assortList, setAssortList] = useState<typeInterface[]>([])
+      // 当前分类 id
+      const [curTypeId, setCurTypeId] = useState("")
 
       // 商品列表
-      const [productList, setProductList] = useState(products)
+      const [productList, setProductList] = useState<productInterface[]>([])
       // 商品列表分页
       const [curProductPage, setProductPage] = useState(1)
+      // 是否已经请求回了所有数据
+      const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
 
       // 当前 dialog 作用的类型
       const [curDialogType, setCurDialogType] = useState<string>('')
@@ -73,29 +81,54 @@ export default function Home({ navigation }) {
 
       // function
       // 获取分类
-      async function getTypeListFn(callback: () => void) {
-            setShowLoading(true)
-            const { data: { list }, status } = await getTypeList({ params: {} })
-            setShowLoading(false)
-            // console.log('getTypeListFn request data:',list, status)
-            if (200 === status) {
-                  setAssortList([...list])
-                  callback?.()
-            } else {
+      async function getTypeListFn(callback: (list: typeInterface[]) => void) {
+            try {
+                  setShowLoading(true)
+                  const { data: { list }, status } = await getTypeList({ data: {} })
+                  // console.log('getTypeListFn request data:',list, status)
+                  if (200 === status) {
+                        setAssortList(() => {
+                              return [...(list as typeInterface[])]
+                        })
+                        callback?.(list)
+                  } else {
+
+                  }
+            } catch (e) {
+                  console.log('get type list error:', e)
+            } finally {
+                  setShowLoading(false)
 
             }
+
       }
 
       // 获取物品
-      async function getProudctListFn(searchParams) {
-            setShowLoading(true)
-            const { data: { list }, status } = await getProductList(searchParams)
-            setShowLoading(false)
-            if (200 === status) {
-                  setProductList([...list])
-            } else {
+      async function getProudctListFn(searchParams: { page?: number, pageNo?: number, parentId?: string }) {
+            try {
+                  setShowLoading(true)
+                  const { data: { list, total = 0, count = 0 }, status } = await getProductList({ data: searchParams })
+                  // console.log('product 请求的数据,', list, status)
+                  if (200 === status) {
+                        setProductList((oldList) => {
+                              if (!searchParams.page || searchParams.page === 1) {
+                                    return [...list]
+                              } else {
+                                    return oldList.concat([...list])
+                              }
+                        })
+                        // 判断是否请求回了所有数据
+                        setIsPageEnd((curProductPage * 10 + count) >= total)
+                  } else {
+
+                  }
+            } catch (e) {
+                  console.log('get product list error:', e)
+            } finally {
+                  setShowLoading(false)
 
             }
+
       }
 
       // 点击操作浮动按钮
@@ -113,7 +146,7 @@ export default function Home({ navigation }) {
                         setShowDelDialog(true)
                         break
                   case 'update':
-                        setCurOperationType('update')
+                        setCurOperationType('updateProduct')
                         setShowModal(true)
                         break
             }
@@ -127,24 +160,45 @@ export default function Home({ navigation }) {
       }
 
       // 查询物品
-      function clickTypeItem(id) {
+      function clickTypeItem(id: string) {
+            setCurTypeId(id)
             setProductPage(1)
-            getProudctListFn({ typeId: id })
+            getProudctListFn({ parentId: id })
+      }
+
+      // 重新请求当前数据
+      function resetRequestCurData(){
+            setCurDialogType("")
+            setShowDelDialog(false)
+            setProductPage(1)
+            getProudctListFn({ parentId: curTypeId })
       }
 
       // 删除物品
-      function handleDelProduct() {
-            const id = curEditId
-            console.log('要删除的id', id)
-            resetDialog()
+      async function handleDelProduct() {
+            try {
+                  setShowLoading(true)
+                  const { status } = await delProductItem({ id: curEditId })
+                  if (200 === status) {
+                        setProductPage(1)
+                        getProudctListFn({ parentId: curTypeId })
+                        resetDialog()
+                  } else {
+
+                  }
+            } catch (e) {
+                  console.log('del product error:', e)
+            } finally {
+                  setShowLoading(false)
+            }
       }
 
 
       // effect
       useEffect(() => {
-            getTypeListFn(function () {
+            getTypeListFn(function (list) {
                   setProductPage(1)
-                  getProudctListFn({})
+                  getProudctListFn({ parentId: list?.[0]?.typeId })
             })
       }, [])
 
@@ -156,9 +210,7 @@ export default function Home({ navigation }) {
                   {/* <Button title="点击" onPress={() => navigation.navigate('User')} /> */}
 
                   {/* loading */}
-                  {showLoading && <View style={styles.loadingEle}>
-                        <ActivityIndicator size='large' animating={true} ></ActivityIndicator>
-                  </View>}
+                  <LoadingEle loading={showLoading}></LoadingEle>
 
 
                   {/* 左侧分类 */}
@@ -167,7 +219,7 @@ export default function Home({ navigation }) {
                               assortList.map(item => {
                                     return <TouchableOpacity
                                           key={item.typeId}
-                                          style={styles.assortItem}
+                                          style={[styles.assortItem, item.typeId === curTypeId && styles.assortItemActive]}
                                           onPress={() => clickTypeItem(item.typeId)}
                                     >
 
@@ -185,7 +237,7 @@ export default function Home({ navigation }) {
                                     > */}
                                           <View>
 
-                                                <Text>{item.typeName}</Text>
+                                                <Text style={styles.typeName}>{item.typeName}</Text>
                                           </View>
                                           {/* </Pressable> */}
                                     </TouchableOpacity>
@@ -198,7 +250,7 @@ export default function Home({ navigation }) {
                   {/* 右侧物品栏 */}
                   <SafeAreaView style={styles.productsContainer}>
                         <VirtualizedList
-                              renderItem={(info) => {
+                              renderItem={(info: any) => {
                                     // console.log('数据', info)
                                     return <HandleRootView rootKey={info.item.key}
                                           ReanimatedSwipeableConfig={{
@@ -217,6 +269,11 @@ export default function Home({ navigation }) {
 
                                                 <View style={styles.productItem} key={info.item.key}>
                                                       <Text style={styles.productItemText}>{info.item.name}</Text>
+                                                      <Text style={styles.productItemDesc}
+                                                            ellipsizeMode="tail"
+                                                            numberOfLines={2}
+                                                      >{info.item.desc}</Text>
+                                                      <Text style={(styles.productItemDate)}>{new Date(info.item.date).toLocaleString('zh')}</Text>
                                                 </View>
 
                                           </TouchableOpacity>
@@ -226,11 +283,25 @@ export default function Home({ navigation }) {
                               data={productList}
                               getItem={(data, index) => {
                                     return {
-                                          name: data[index].name,
-                                          key: data[index].key
+                                          name: data[index].productName,
+                                          key: data[index].productId,
+                                          date: data[index].createDate,
+                                          desc: data[index].productDescript
                                     }
                               }}
+                              ListEmptyComponent={() => <View style={styles.productEmptyOrPageEnd}>
+                                    <Text>暂无数据</Text>
+                              </View>}
+                              // 未成功
+                              // ListFooterComponent={(): any => {
+                              //       console.log('当前触发', isPageEnd)
+                              //       isPageEnd ? <View style={{height:100, backgroundColor: 'red'}}>
+                              //             <Text>没有更多数据了~</Text>
+                              //       </View> : <></>
+                              // }}
+                              // ListFooterComponentStyle={styles.productEmptyOrPageEnd}
                         />
+
                   </SafeAreaView>
 
                   {/* 弹窗 -- 新增、物品编辑  */}
@@ -240,12 +311,13 @@ export default function Home({ navigation }) {
                         onRequestClose={() => setShowModal(false)}
                   >
                         <View style={styles.modalTextView}>
-                              <Text style={styles.modalTitle}>{'add' === curOperationType ? '新增' : ['update', 'typeManagement'].includes(curOperationType) ? '编辑' : 'details' === curOperationType ? '详情' : ''}</Text>
+                              <Text style={styles.modalTitle}>{'add' === curOperationType ? '新增' : ['updateType', 'updateProduct'].includes(curOperationType) ? '编辑' : 'details' === curOperationType ? '详情' : ''}</Text>
 
                         </View>
                         {
-                              ['add', 'update', 'typeManagement'].includes(curOperationType) ? <OperateTypeOrProduct setShowModal={setShowModal} type={curOperationType}
+                              ['add', 'updateType', 'updateProduct'].includes(curOperationType) ? <OperateTypeOrProduct setShowModal={setShowModal} type={curOperationType}
                                     id={curEditId}
+                                    resetRequest={resetRequestCurData}
                               ></OperateTypeOrProduct>
                                     : <></>
                         }
@@ -301,16 +373,11 @@ export default function Home({ navigation }) {
                         onBackdropPress={resetDialog}
                   >
                         <Dialog.Title title={'del' === curDialogType ? '确认删除吗？' : ''} />
-                        <View><Text>删除这里的东西</Text></View>
+                        <View><Text>删除该物品吗？</Text></View>
                         <Dialog.Actions>
-                              <Dialog.Button title="确定" onPress={() => {
-                                    console.log('删除', curEditId)
-                                    handleDelProduct()
-
-
-                              }}></Dialog.Button>
+                              <Dialog.Button title="确定" onPress={() => handleDelProduct()
+                              }></Dialog.Button>
                               <Dialog.Button title="取消" onPress={() => {
-                                    console.log('取消删除')
                                     resetDialog()
                               }}></Dialog.Button>
 
@@ -327,18 +394,6 @@ const styles = StyleSheet.create({
       container: {
             flex: 1,
             flexDirection: 'row'
-      },
-      loadingEle: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.1)'
       },
       assortContainer: {
             width: WINDOW_WIDTH * (3 / 11),
@@ -358,23 +413,48 @@ const styles = StyleSheet.create({
             borderBottomWidth: StyleSheet.hairlineWidth,
             borderBottomColor: 'gray'
       },
+      assortItemActive:{
+            backgroundColor: '#75ABD1',
+      },
+      typeName: {
+            fontSize: 24
+      },
       productsContainer: {
             // backgroundColor: 'tomato',
             width: WINDOW_WIDTH * (8 / 11),
             flexBasis: WINDOW_WIDTH * (8 / 11),
             flexGrow: 1,
             flexShrink: 0,
+            overflow: 'hidden'
       },
       productItem: {
-            height: 50,
+            height: 126,
+            padding: 10,
             borderBottomColor: 'tomato',
             borderBottomWidth: StyleSheet.hairlineWidth,
-            justifyContent: 'center',
-            alignItems: 'center'
+            // justifyContent: 'flex-start',
+            // alignItems: 'center'
       },
       productItemText: {
-            fontSize: 18,
-
+            fontSize: 20,
+            marginBottom: 8
+      },
+      productItemDesc: {
+            height: 46,
+            fontSize: 16,
+            color: "gray",
+            marginBottom: 8
+      },
+      productItemDate: {
+            fontSize: 12,
+            color: "gray"
+      },
+      // 物品列表为空
+      productEmptyOrPageEnd:{
+            padding: 20,
+            fontSize: 16,
+            color: "#717171",
+            alignItems: 'center'
       },
       modalTextView: {
 

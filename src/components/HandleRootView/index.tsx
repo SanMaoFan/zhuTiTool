@@ -12,7 +12,7 @@ interface PropsInterface {
       ReanimatedSwipeableConfig: any
 }
 
-export default function HandleRootView({ rootKey, children, ReanimatedSwipeableConfig }: PropsInterface): () => React.ReactNode {
+export default function HandleRootView({ rootKey, children, ReanimatedSwipeableConfig }: PropsInterface): React.ReactNode {
       return <GestureHandlerRootView key={rootKey}>
             <ReanimatedSwipeable
                   {...ReanimatedSwipeableConfig}

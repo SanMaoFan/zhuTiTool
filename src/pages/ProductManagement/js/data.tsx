@@ -1,42 +1,18 @@
+// 分类类型
+export interface typeInterface {
+      typeId: string
+      typeName: string
+      createDate: string
+      typeDescript: string
+      isDel: number
+}
 
-// 商品数据
-export const products = [{
-      name: '测试1',
-      key: 'test1'
-}, {
-      name: '测试2',
-      key: 'test2'
-}, {
-      name: '测试3',
-      key: 'test3'
-}, {
-      name: '测试4',
-      key: 'test4'
-}, {
-      name: '测试5',
-      key: 'test5'
-}, {
-      name: '测试6',
-      key: 'test6'
-}, {
-      name: '测试7',
-      key: 'test7'
-}, {
-      name: '测试8',
-      key: 'test8'
-}, {
-      name: '测试9',
-      key: 'test9'
-}, {
-      name: '测试10',
-      key: 'test10'
-}, {
-      name: '测试11',
-      key: 'test11'
-}, {
-      name: '测试12',
-      key: 'test12'
-}, {
-      name: '测试13',
-      key: 'test13'
-}]
+// 物品类型
+export interface productInterface {
+      productId: string
+      productName: string
+      createDate: string
+      productDescript: string
+      parentId: string
+      isDel: number
+}
