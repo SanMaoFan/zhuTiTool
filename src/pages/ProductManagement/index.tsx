@@ -12,6 +12,7 @@ import LoadingEle from '@/components/LoadingEle'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '@/components/HandleRootView'
 import OperateTypeOrProduct from './components/operateTypeOrProduct'
+import DetailsEle from './components/detailsEle'
 
 // style
 import commonStyles from '@/common/styles'
@@ -68,7 +69,7 @@ export default function Home({ navigation }) {
       // 商品列表分页
       const [curProductPage, setProductPage] = useState(1)
       // 是否空列表
-      const [isEmptyList, setIsEmptyList]= useState(false)
+      const [isEmptyList, setIsEmptyList] = useState(false)
       // 是否已经请求回了所有数据
       const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
 
@@ -159,6 +160,9 @@ export default function Home({ navigation }) {
 
       // 重置 dialog
       function resetDialog() {
+            // 新增、编辑、详情 弹窗恢复
+            setShowModal(false)
+            // 删除 弹窗恢复
             setShowDelDialog(false)
             setCurEditId('')
       }
@@ -266,11 +270,9 @@ export default function Home({ navigation }) {
                                           }}
                                     >
                                           <TouchableOpacity onPress={() => {
-                                                setShowLoading(true)
-                                                setTimeout(() => {
-                                                      setShowLoading(false)
-                                                      setShowModal(true)
-                                                }, 2000)
+                                                // 点击物品展示详情
+                                                setCurOperationType("details")
+                                                setCurEditId(info.item.key)
                                           }}>
 
                                                 <View style={styles.productItem} key={info.item.key}>
@@ -300,8 +302,8 @@ export default function Home({ navigation }) {
                               </View>}
                               // 未成功
                               ListFooterComponent={(): any => {
-                                    return isPageEnd && !isEmptyList ? 
-                                          <Text>没有更多数据了~</Text>: <></>
+                                    return isPageEnd && !isEmptyList ?
+                                          <Text>没有更多数据了~</Text> : <></>
                               }}
                               ListFooterComponentStyle={styles.productEmptyOrPageEnd}
                         />
@@ -319,12 +321,13 @@ export default function Home({ navigation }) {
 
                         </View>
                         {
-                              ['add', 'updateType', 'updateProduct'].includes(curOperationType) ? <OperateTypeOrProduct setShowModal={setShowModal} type={curOperationType}
+                              ['add', 'updateType', 'updateProduct'].includes(curOperationType) ? <OperateTypeOrProduct type={curOperationType}
                                     editId={curEditId}
                                     resetRequest={resetRequestCurData}
+                                    resetDialog={resetDialog}
                                     curTypeId={curTypeId}
                               ></OperateTypeOrProduct>
-                                    : <></>
+                                    : ['details'].includes(curOperationType) ? <DetailsEle type='product' id={curEditId}></DetailsEle> <></>
                         }
                         {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
 

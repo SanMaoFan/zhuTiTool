@@ -15,10 +15,11 @@ import { getProductInfo, addProductItem, updateProductItem } from '@/api/product
 
 
 interface Props {
-      setShowModal: (show: boolean) => void
       resetRequest: () => void
+      resetDialog: () => void
       type: string
       editId: string
+      curTypeId: string
 }
 
 interface FormData {
@@ -33,18 +34,17 @@ interface FormValues {
       name: string
       type: 'type' | 'product'
       typeItem?: string
-      curTypeId: string
 }
 
 
 // 操作类型或商品
 // type 分为： updateProduct, updateType, add 分别代表 编辑物品、编辑分类、新增
 export default function OperateTypeOrProduct({
-      setShowModal,
       resetRequest,
+      resetDialog,
       type: curDialogType,
       editId,
-      curTypeId
+      curTypeId,
 }: Props) {
 
       // navigation
@@ -213,7 +213,7 @@ export default function OperateTypeOrProduct({
                         if (curTypeId === objParams?.parentId) {
                               resetRequest()
                         } else {
-                              setShowModal(false)
+                              resetDialog()
                         }
                   } else {
                         ToastAndroid.showWithGravity('请求失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
