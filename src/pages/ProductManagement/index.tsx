@@ -3,7 +3,7 @@ import React, { useState, useEffect, ReactNode } from 'react'
 
 
 // components
-import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable } from 'react-native'
+import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable, ToastAndroid } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SpeedDial, Dialog, Icon } from '@rneui/themed'
@@ -98,6 +98,7 @@ export default function Home({ navigation }) {
 
                   }
             } catch (e) {
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
                   console.log('get type list error:', e)
             } finally {
                   setShowLoading(false)
@@ -128,6 +129,7 @@ export default function Home({ navigation }) {
 
                   }
             } catch (e) {
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
                   console.log('get product list error:', e)
             } finally {
                   setShowLoading(false)
@@ -196,6 +198,7 @@ export default function Home({ navigation }) {
 
                   }
             } catch (e) {
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
                   console.log('del product error:', e)
             } finally {
                   setShowLoading(false)
@@ -270,9 +273,17 @@ export default function Home({ navigation }) {
                                           }}
                                     >
                                           <TouchableOpacity onPress={() => {
-                                                // 点击物品展示详情
-                                                setCurOperationType("details")
-                                                setCurEditId(info.item.key)
+                                                      setShowModal(true)
+                                                      // 点击物品展示详情
+                                                      setCurOperationType('details')
+                                                      setCurEditId(info.item.key)
+
+                                                // setShowLoading(true)
+                                                // setTimeout(() => {
+                                                //       setShowLoading(false)
+                                                //       setShowModal(true)
+                                                // }, 2000)
+
                                           }}>
 
                                                 <View style={styles.productItem} key={info.item.key}>
@@ -327,7 +338,8 @@ export default function Home({ navigation }) {
                                     resetDialog={resetDialog}
                                     curTypeId={curTypeId}
                               ></OperateTypeOrProduct>
-                                    : ['details'].includes(curOperationType) ? <DetailsEle type='product' id={curEditId}></DetailsEle> <></>
+                                    : ['details'].includes(curOperationType) ? <DetailsEle curType='product' curId={curEditId}
+                                          resetDialog={resetDialog}></DetailsEle> : <></>
                         }
                         {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
 
