@@ -67,6 +67,8 @@ export default function Home({ navigation }) {
       const [productList, setProductList] = useState<productInterface[]>([])
       // 商品列表分页
       const [curProductPage, setProductPage] = useState(1)
+      // 是否空列表
+      const [isEmptyList, setIsEmptyList]= useState(false)
       // 是否已经请求回了所有数据
       const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
 
@@ -117,6 +119,8 @@ export default function Home({ navigation }) {
                                     return oldList.concat([...list])
                               }
                         })
+                        // 是否空数据
+                        setIsEmptyList(list.length === 0)
                         // 判断是否请求回了所有数据
                         setIsPageEnd((curProductPage * 10 + count) >= total)
                   } else {
@@ -161,15 +165,16 @@ export default function Home({ navigation }) {
 
       // 查询物品
       function clickTypeItem(id: string) {
+            if (id === curTypeId) return
             setCurTypeId(id)
             setProductPage(1)
             getProudctListFn({ parentId: id })
       }
 
       // 重新请求当前数据
-      function resetRequestCurData(){
+      function resetRequestCurData() {
+            setShowModal(false)
             setCurDialogType("")
-            setShowDelDialog(false)
             setProductPage(1)
             getProudctListFn({ parentId: curTypeId })
       }
@@ -178,7 +183,7 @@ export default function Home({ navigation }) {
       async function handleDelProduct() {
             try {
                   setShowLoading(true)
-                  const { status } = await delProductItem({ id: curEditId })
+                  const { status } = await delProductItem(curEditId)
                   if (200 === status) {
                         setProductPage(1)
                         getProudctListFn({ parentId: curTypeId })
@@ -198,6 +203,7 @@ export default function Home({ navigation }) {
       useEffect(() => {
             getTypeListFn(function (list) {
                   setProductPage(1)
+                  setCurTypeId(list?.[0]?.typeId)
                   getProudctListFn({ parentId: list?.[0]?.typeId })
             })
       }, [])
@@ -293,13 +299,11 @@ export default function Home({ navigation }) {
                                     <Text>暂无数据</Text>
                               </View>}
                               // 未成功
-                              // ListFooterComponent={(): any => {
-                              //       console.log('当前触发', isPageEnd)
-                              //       isPageEnd ? <View style={{height:100, backgroundColor: 'red'}}>
-                              //             <Text>没有更多数据了~</Text>
-                              //       </View> : <></>
-                              // }}
-                              // ListFooterComponentStyle={styles.productEmptyOrPageEnd}
+                              ListFooterComponent={(): any => {
+                                    return isPageEnd && !isEmptyList ? 
+                                          <Text>没有更多数据了~</Text>: <></>
+                              }}
+                              ListFooterComponentStyle={styles.productEmptyOrPageEnd}
                         />
 
                   </SafeAreaView>
@@ -316,8 +320,9 @@ export default function Home({ navigation }) {
                         </View>
                         {
                               ['add', 'updateType', 'updateProduct'].includes(curOperationType) ? <OperateTypeOrProduct setShowModal={setShowModal} type={curOperationType}
-                                    id={curEditId}
+                                    editId={curEditId}
                                     resetRequest={resetRequestCurData}
+                                    curTypeId={curTypeId}
                               ></OperateTypeOrProduct>
                                     : <></>
                         }
@@ -413,11 +418,12 @@ const styles = StyleSheet.create({
             borderBottomWidth: StyleSheet.hairlineWidth,
             borderBottomColor: 'gray'
       },
-      assortItemActive:{
+      assortItemActive: {
             backgroundColor: '#75ABD1',
       },
       typeName: {
-            fontSize: 24
+            fontSize: 24,
+            marginHorizontal: 10
       },
       productsContainer: {
             // backgroundColor: 'tomato',
@@ -450,7 +456,7 @@ const styles = StyleSheet.create({
             color: "gray"
       },
       // 物品列表为空
-      productEmptyOrPageEnd:{
+      productEmptyOrPageEnd: {
             padding: 20,
             fontSize: 16,
             color: "#717171",

@@ -2,7 +2,7 @@ import {  AxiosResponse } from 'axios'
 import axios from '../index'
 
 // 列表
-export const getTypeList = (data): Promise<AxiosResponse> => {
+export const getTypeList = ({data}): Promise<AxiosResponse> => {
     return axios({
         method: "post",
         url: "/type",
@@ -11,7 +11,7 @@ export const getTypeList = (data): Promise<AxiosResponse> => {
 }
 
 // 新增
-export const addTypeItem = ({data}): Promise<AxiosResponse> => {
+export const addTypeItem = (data: {name: string, descript: string}): Promise<AxiosResponse> => {
     return axios({
         method: "post",
         url: '/type/add',
@@ -20,10 +20,9 @@ export const addTypeItem = ({data}): Promise<AxiosResponse> => {
 }
 
 // 详情
-export const getTypeInfo = (params): Promise<AxiosResponse> => {
+export const getTypeInfo = (id: string): Promise<AxiosResponse> => {
     return axios({
-        url: `/type/${params.id}`,
-        params
+        url: `/type/${id}`
     })
 }
 

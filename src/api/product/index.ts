@@ -3,7 +3,7 @@ import axios from '../index'
 
 
 // 列表
-export const getProductList = ({ data }): Promise<AxiosResponse> => {
+export const getProductList = ({data}): Promise<AxiosResponse> => {
     return axios({
         method: "post",
         url: '/product',
@@ -12,8 +12,9 @@ export const getProductList = ({ data }): Promise<AxiosResponse> => {
 }
 
 // 新增
-export const addProductItem = ({ data }): Promise<AxiosResponse> => {
+export const addProductItem = (data): Promise<AxiosResponse> => {
     return axios({
+        method: "post",
         url: '/product/add',
         data
     })
@@ -21,10 +22,10 @@ export const addProductItem = ({ data }): Promise<AxiosResponse> => {
 
 
 // 详情
-export const getProductInfo = ({ id }: {  id: string  }): Promise<AxiosResponse> => {
+export const getProductInfo = (id: string): Promise<AxiosResponse> => {
     return axios({
         url: `/product/${id}`,
-        
+
     })
 }
 
@@ -38,7 +39,7 @@ export const updateProductItem = (data): Promise<AxiosResponse> => {
 }
 
 // 删除
-export const delProductItem = ({ id }: { id: string }): Promise<AxiosResponse> => {
+export const delProductItem = (id: string): Promise<AxiosResponse> => {
     return axios({
         method: "delete",
         url: `/product/${id}`

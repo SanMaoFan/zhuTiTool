@@ -10,7 +10,7 @@ import { Picker } from '@react-native-picker/picker'
 import LoadingEle from '@/components/LoadingEle'
 
 // api
-import { getTypeList, addTypeItem, updateTypeItem } from '@/api/type'
+import { getTypeList, addTypeItem, updateTypeItem, getTypeInfo } from '@/api/type'
 import { getProductInfo, addProductItem, updateProductItem } from '@/api/product'
 
 
@@ -18,7 +18,14 @@ interface Props {
       setShowModal: (show: boolean) => void
       resetRequest: () => void
       type: string
-      id: string
+      editId: string
+}
+
+interface FormData {
+      name: string
+      descript?: string 
+      parentId?: string 
+      id?: string 
 }
 
 interface FormValues {
@@ -26,6 +33,7 @@ interface FormValues {
       name: string
       type: 'type' | 'product'
       typeItem?: string
+      curTypeId: string
 }
 
 
@@ -35,7 +43,8 @@ export default function OperateTypeOrProduct({
       setShowModal,
       resetRequest,
       type: curDialogType,
-      id
+      editId,
+      curTypeId
 }: Props) {
 
       // navigation
@@ -61,60 +70,121 @@ export default function OperateTypeOrProduct({
       // 请求数据
       async function getInfo() {
             try {
-                  // console.log('当前类型和数据：', type, id)
+                  // console.log('当前类型和数据：', type, editId)
                   setShowLoading(true)
-                  setEditId(id || null)
                   let name, descriptions, typeItem
                   switch (curDialogType) {
                         // 请求物品详情、分类列表
                         case 'updateProduct':
-                              const { data, status: productResultStatus } = await getProductInfo({ id })
-                              if (200 === productResultStatus) {
-                                    const { parentId, productDescript, productName } = data
+                              await getTypeListData()
+                              await getProductDetail((detailData: {
+                                    name: string
+                                    descriptions: string
+                                    typeItem: string
+                              }) => {
+                                    const { name: productName,
+                                          descriptions: productDescript,
+                                          typeItem: productParentId } = detailData
                                     name = productName
                                     descriptions = productDescript
-                                    typeItem = parentId
-                              } else {
-                                    ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
-                              }
-                              // 请求分类数据
-                              const { data: { list }, status: typeResultStatus } = await getTypeList({ pageNo: 100 })
-                              if (200 === typeResultStatus) {
-                                    // console.log('分类数据列表, ', list)
-                                    setTypeList(() => {
-                                          return list.map(item => {
-                                                return {
-                                                      value: item.typeId,
-                                                      name: item.typeName
-                                                }
-                                          })
-                                    })
-                              } else {
-                                    ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
-                              }
+                                    typeItem = productParentId
+                              })
                               break
                         // 请求分类详情
                         case 'updateType':
+                              await getTypeDetail()
+                              break
+                        case 'add':
+                              await getTypeListData()
                               break
                   }
                   // 设置数据
-                  JFormRef.current?.setValues({
+                  ['updateProduct', 'updateType'].includes(curDialogType) && JFormRef.current?.setValues({
                         type: 'updateProduct' === curDialogType ? 'product' : 'updateType' === curDialogType ? 'type' : 'type',
                         name, typeItem, descriptions
                   })
             } catch (e) {
                   console.log('getInfo error: ', e)
-                  ToastAndroid.showWithGravity('提交失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
             } finally {
                   setShowLoading(false)
             }
 
       }
+
+      // 请求物品详情
+      async function getProductDetail(callback) {
+            try {
+                  const { data, status: productResultStatus } = await getProductInfo(curEditId as string)
+                  if (200 === productResultStatus) {
+                        const { parentId, productDescript, productName } = data
+                        callback?.({
+                              name: productName,
+                              descriptions: productDescript,
+                              typeItem: parentId
+                        })
+
+                  } else {
+                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                  }
+            } catch (e) {
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+
+            }
+
+
+      }
+
+      // 请求分类详情
+      async function getTypeDetail(callback) {
+            try {
+                  const { data, status } = await getTypeInfo(curEditId as string)
+                  if (200 === status) {
+                        const { typeName, typeDescript } = data
+                        callback?.({
+                              name: typeName,
+                              descriptions: typeDescript,
+                              typeItem: ''
+                        })
+                  } else {
+                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                  }
+            } catch (e) {
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+
+            }
+      }
+
+      // 请求分类列表
+      async function getTypeListData() {
+            try {
+                  // 请求分类数据
+                  const { data: { list }, status: typeResultStatus } = await getTypeList({ pageNo: 100 })
+                  if (200 === typeResultStatus) {
+                        // console.log('分类数据列表, ', list)
+                        setTypeList(() => {
+                              return list.map(item => {
+                                    return {
+                                          value: item.typeId,
+                                          name: item.typeName
+                                    }
+                              })
+                        })
+                  } else {
+                        ToastAndroid.show('分类列表请求失败！', ToastAndroid.SHORT)
+                  }
+            } catch (e) {
+                  console.log('getInfo error: ', e)
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+            }
+      }
       // 提交表单
       async function handleSubmitForm(values: FormValues) {
             try {
                   setShowLoading(true)
-                  let objParams = {}
+                  let objParams: FormData = {
+                        name: "默认名称"
+                  }
                   let requestFn = ('updateProduct' === curDialogType) ? updateProductItem : ('updateType' === curDialogType) ? updateTypeItem : ('add' === curDialogType ? ('type' === values.type ? addTypeItem : addProductItem) : '')
                   const { descriptions,
                         name,
@@ -136,12 +206,18 @@ export default function OperateTypeOrProduct({
                               id: curEditId
                         })
                   }
-                  const { status } = await requestFn(objParams)
+                  console.log('请求的方法：', requestFn)
+                  const { status, message } = await requestFn(objParams)
                   if (200 === status) {
                         ToastAndroid.showWithGravity((['updateProduct', 'updateType'].includes(curDialogType) ? '修改' : '新增') + '成功！', ToastAndroid.SHORT, ToastAndroid.TOP)
-                        resetRequest()
+                        if (curTypeId === objParams?.parentId) {
+                              resetRequest()
+                        } else {
+                              setShowModal(false)
+                        }
                   } else {
                         ToastAndroid.showWithGravity('请求失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
+                        console.log('message: ', message)
                   }
             } catch (e) {
                   console.log("submit form error: ", e)
@@ -155,6 +231,7 @@ export default function OperateTypeOrProduct({
 
       // useEffect
       useEffect(() => {
+            setEditId(editId || null)
             getInfo()
       }, [])
 
