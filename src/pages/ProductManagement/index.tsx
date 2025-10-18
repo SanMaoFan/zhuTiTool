@@ -3,7 +3,7 @@ import React, { useState, useEffect, ReactNode } from 'react'
 
 
 // components
-import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable, ToastAndroid } from 'react-native'
+import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SpeedDial, Dialog, Icon } from '@rneui/themed'
@@ -11,6 +11,7 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 import LoadingEle from '@/components/LoadingEle'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '@/components/HandleRootView'
+import AndroidToastEle from '@/components/AndroidToastEle'
 
 import TypeOrProductOperationModal from '@/components/TypeOrProductOperationModal'
 
@@ -33,7 +34,7 @@ import { getTypeList } from '@/api/type'
 import { getProductList, delProductItem } from '@/api/product'
 
 // interface 
-import { type typeInterface, type productInterface } from './js/data'
+import { type TypeInterface, type ProductInterface } from '@/utils'
 
 
 
@@ -57,12 +58,12 @@ export default function Home({ navigation }) {
       const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
 
       // 分类列表
-      const [assortList, setAssortList] = useState<typeInterface[]>([])
+      const [assortList, setAssortList] = useState<TypeInterface[]>([])
       // 当前分类/物品 id
       const [curTypeId, setCurTypeId] = useState("")
 
       // 商品列表
-      const [productList, setProductList] = useState<productInterface[]>([])
+      const [productList, setProductList] = useState<ProductInterface[]>([])
       // 商品列表分页
       const [curProductPage, setProductPage] = useState(1)
       // 是否空列表
@@ -92,10 +93,10 @@ export default function Home({ navigation }) {
                         })
                         callback?.(list)
                   } else {
-                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('请求失败！')
                   }
             } catch (e) {
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log('get type list error:', e)
             } finally {
                   setShowLoading(false)
@@ -123,20 +124,19 @@ export default function Home({ navigation }) {
                         // 判断是否请求回了所有数据
                         setIsPageEnd((curProductPage * 10 + count) >= total)
                   } else {
-                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('请求失败！')
                   }
             } catch (e) {
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log('get product list error:', e)
             } finally {
                   setShowLoading(false)
 
             }
-
       }
 
       // 点击操作浮动按钮
-      function clickSpeedDialAction(type: string) {
+      function clickSpeedDialAction(type: "add") {
             setCurOperationType(type)
             setShowModal(true)
             setOpenSpeedDial(false)
@@ -188,14 +188,15 @@ export default function Home({ navigation }) {
                   setShowLoading(true)
                   const { status } = await delProductItem(curEditId)
                   if (200 === status) {
+                        AndroidToastEle('删除成功！')
                         setProductPage(1)
                         getProudctListFn({ parentId: curTypeId })
                         resetDialog()
                   } else {
-                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('请求失败！')
                   }
             } catch (e) {
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log('del product error:', e)
             } finally {
                   setShowLoading(false)
@@ -367,7 +368,6 @@ export default function Home({ navigation }) {
                               onPress={() => {
                                     navigation.navigate('TypeManagement')
                                     setOpenSpeedDial(false)
-                                    // clickSpeedDialAction('typeManagement')
                               }}
 
                         />

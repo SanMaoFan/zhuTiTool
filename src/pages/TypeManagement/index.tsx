@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from 'react'
 
 // components
-import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Modal, Dimensions, ToastAndroid } from 'react-native'
+import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Modal, Dimensions } from 'react-native'
 import { SearchBar, SpeedDial, Dialog } from '@rneui/themed'
 import HandleRootView from '@/components/HandleRootView'
 import RenderListRightEle from '../ProductManagement/components/listItemRightActions'
@@ -10,14 +10,17 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 import TypeOrProductOperationModal from '@/components/TypeOrProductOperationModal'
 import { IconNode } from '@rneui/base';
 import LoadingEle from '@/components/LoadingEle'
+import AndroidToastEle from '@/components/AndroidToastEle'
 
 // api
-import { getTypeList } from '@/api/type'
+import { getTypeList, delTypeItem } from '@/api/type'
 import { getProductList, delProductItem } from '@/api/product'
 
 // style
 import commonStyles, { basicBackgroundColor } from '@/common/styles'
 
+// interface
+import { type TypeInterface, type ProductInterface } from '@/utils'
 
 
 /**
@@ -37,47 +40,9 @@ export default function TypeManagement() {
       // loading
       const [showLoading, setShowLoading] = useState(false)
       // 当前查看列表的类型
-      const [curListType, setCurListType] = useState('type')
+      const [curListType, setCurListType] = useState<'type' | 'product'>('type')
       // 列表数据
-      const [listData, setListData] = useState([
-            {
-                  key: 'x',
-                  title: '测2试'
-            }, {
-                  key: '1x',
-                  title: '测1试'
-            }, {
-                  key: '21x',
-                  title: '测1试'
-            }, {
-                  key: '1x2',
-                  title: '测2试'
-            }, {
-                  key: '11x',
-                  title: '测1试'
-            }, {
-                  key: '23x',
-                  title: '测1试'
-            }, {
-                  key: 'x3',
-                  title: '测2试'
-            }, {
-                  key: '13x',
-                  title: '测1试'
-            }, {
-                  key: '24x',
-                  title: '测1试'
-            }, {
-                  key: '4x',
-                  title: '测2试'
-            }, {
-                  key: '41x',
-                  title: '测1试'
-            }, {
-                  key: '26x',
-                  title: 'adfasdfasdfasd'
-            }
-      ])
+      const [listData, setListData] = useState<{ name: string, key: string, date: string, desc: string, type: boolean }[]>([])
       // 商品/物品列表分页
       const [curProductPage, setProductPage] = useState(1)
       // 是否空列表
@@ -85,7 +50,7 @@ export default function TypeManagement() {
       // 是否已经请求回了所有数据
       const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
       // 当前浮动按钮点击的操作类型
-      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'typeManagement' | 'update' | 'details'>('')
+      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
       // 浮动按钮是否展开
       const [openSpeedDial, setOpenSpeedDial] = useState(false)
       // 是否显示弹窗
@@ -109,7 +74,9 @@ export default function TypeManagement() {
                         setShowDelDialog(true)
                         break
                   case 'update':
-                        setCurOperationType('update')
+                        setCurOperationType(() => {
+                              return 'type' === curListType ? 'updateType' : 'updateProduct'
+                        })
                         setShowModal(true)
                         break
             }
@@ -122,48 +89,98 @@ export default function TypeManagement() {
             setCurEditId('')
       }
 
+      // 进行搜索
+      function handleSearch() {
+            setProductPage(1)
+            getListData({ page: 1, name: searchVal, listType: curListType })
+      }
+
       // 获取列表
-      async function getListData(searchParams:{ page?: number, pageNo?: number, name?:string }) {
+      async function getListData(
+            searchParams:
+                  { page?: number, pageNo?: number, name?: string, listType?: 'type' | 'product' } =
+                  { listType: 'type', page: 1 }
+      ) {
             try {
                   setShowLoading(true)
-                  const requestFn = 'type' === curListType ? getTypeList : getProductList
-                  const { data: { list, total = 0, count = 0 }, status } = await requestFn({data: {name: searchParams.name?.trim()}})
+                  const requestFn = 'type' === searchParams.listType ? getTypeList : getProductList
+                  const { data: { list, total = 0, count = 0 }, status } = await requestFn({
+                        data: {
+                              ['type' === searchParams.listType ? 'typeName' : 'productName']: searchParams.name?.trim(),
+                              page: searchParams.page
+                        }
+                  })
                   if (200 === status) {
-                        setListData([])
+                        const isType = 'type' === searchParams.listType
                         console.log('获取数据', list)
-                        // setListData((oldList) => {
-                        //       if (!searchParams.page || searchParams.page === 1) {
-                        //             return [...list]
-                        //       } else {
-                        //             return oldList.concat([...list])
-                        //       }
-                        // })
+
+                        const newData = list.map(item => {
+                              const {
+                                    typeId,
+                                    productId,
+                                    typeName,
+                                    typeDescript,
+                                    productName,
+                                    productDescript,
+                                    createDate } = item
+                              return {
+                                    type: isType,
+                                    key: isType ? typeId : productId,
+                                    name: isType ? typeName : productName,
+                                    desc: isType ? typeDescript : productDescript,
+                                    date: createDate
+                              }
+                        })
+
+                        setListData((oldList) => {
+                              if (!searchParams.page || searchParams.page === 1) {
+                                    return [...newData]
+                              } else {
+                                    return oldList.concat([...newData])
+                              }
+                        })
                         // 是否空数据
                         setIsEmptyList(list.length === 0)
                         // 判断是否请求回了所有数据
-                        setIsPageEnd((curProductPage * 10 + count) >= total)
+                        setIsPageEnd(((curProductPage - 1) * 10 + count) >= total)
                   } else {
-                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('请求失败！')
                   }
             } catch (e) {
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log('get list error:', e)
             } finally {
                   setShowLoading(false)
             }
       }
 
-      // 删除分类
-      function handleDelType() {
-            const id = curEditId
-            console.log('要删除的id', id)
-            resetDialog()
+      // 删除数据
+      async function handleDelData() {
+            try {
+                  const requestFn = 'type' === curListType ? delTypeItem : delProductItem
+                  const { status } = await requestFn(curEditId)
+                  if (200 === status) {
+                        AndroidToastEle('删除成功！')
+                        resetRequestCurData()
+                  } else {
+
+                  }
+            } catch (e) {
+                  AndroidToastEle('网络出错，请稍后再试！')
+                  console.log('del data error:', e)
+            } finally {
+                  setShowLoading(false)
+            }
+
       }
       // 重新请求当前数据
       function resetRequestCurData() {
+            setOpenSpeedDial(false)
             setShowModal(false)
+            setShowDelDialog(false)
             setCurDialogType("")
             setProductPage(1)
+            getListData({ page: 1, name: searchVal, listType: curListType })
       }
 
 
@@ -187,12 +204,8 @@ export default function TypeManagement() {
                   showLoading={showLoading}
                   onKeyPress={({ nativeEvent: { key } }) => {
                         if ('Enter' === key) {
-                              setShowLoading(true)
-                              setTimeout(() => {
-                                    setShowLoading(false)
-                              }, 1000)
+                              handleSearch()
                         }
-
                   }}
 
             ></SearchBar>
@@ -217,20 +230,15 @@ export default function TypeManagement() {
                                                 }, 2000)
                                           }}>
 
-                                          <View style={styles.typeItem}>
-                                                <View>
-                                                      <Text style={styles.typeItemTitle}>{item.title}</Text>
-                                                </View>
-                                                <View style={styles.typeItemDescView}>
-                                                      <View style={styles.descViewItem}>
-                                                            <Text style={styles.typeItemDesc}>柜子</Text>
-                                                      </View>
-                                                      <View style={[styles.descViewItem, styles.typeItemDateView]}>
-                                                            <Text style={styles.typeItemDesc}>2025-07-07</Text>
-                                                      </View>
-                                                </View>
 
-
+                                          <View style={styles.listItem} key={item.key}>
+                                                <Text style={styles.listItemTitle}>{item.name}</Text>
+                                                <Text style={styles.listItemText}>类型：{item.type ? '分类' : '物品'}</Text>
+                                                <Text style={styles.listItemDesc}
+                                                      ellipsizeMode="tail"
+                                                      numberOfLines={2}
+                                                >{item.desc}</Text>
+                                                <Text style={(styles.listItemDate)}>{new Date(item.date).toLocaleString('zh')}</Text>
                                           </View>
 
                                     </TouchableOpacity>
@@ -283,10 +291,16 @@ export default function TypeManagement() {
                               />
                         }}
                         color={basicBackgroundColor}
-                        title='切换成分类'
+                        title={`切换成${'type' === curListType ? '物品' : '分类'}`}
                         onPress={() => {
-
-                              // 其他
+                              setCurListType(type => {
+                                    const newType = 'type' === type ? 'product' : 'type'
+                                    // 关闭浮窗
+                                    setOpenSpeedDial(!openSpeedDial)
+                                    // 请求
+                                    getListData({ page: 1, name: searchVal, listType: newType })
+                                    return newType
+                              })
 
                         }}
 
@@ -313,17 +327,12 @@ export default function TypeManagement() {
                   isVisible={showDelDialog}
                   onBackdropPress={resetDialog}
             >
-                  <Dialog.Title title={'del' === curDialogType ? '删除' : ''} />
-                  <View><Text>确认删除吗？</Text></View>
+                  <Dialog.Title title={'del' === curDialogType ? '确认删除吗？' : ''} />
+                  <View><Text>删除该数据吗？</Text></View>
                   <Dialog.Actions>
-                        <Dialog.Button title="确定" onPress={() => {
-                              console.log('删除', curEditId)
-                              handleDelType()
-
-
-                        }}></Dialog.Button>
+                        <Dialog.Button title="确定" onPress={() => handleDelData()
+                        }></Dialog.Button>
                         <Dialog.Button title="取消" onPress={() => {
-                              console.log('取消删除')
                               resetDialog()
                         }}></Dialog.Button>
 
@@ -348,29 +357,32 @@ const styles = StyleSheet.create({
             height: Dimensions.get('window').height - 192,
             // backgroundColor: 'red'
       },
-
-      typeItem: {
+      listItem: {
+            height: 168,
             padding: 10,
+            borderBottomColor: 'tomato',
             borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: 'gray',
+            // justifyContent: 'flex-start',
+            // alignItems: 'center'
       },
-      typeItemTitle: {
+      listItemTitle: {
+            fontSize: 22,
+            marginBottom: 8
+      },
+      listItemText: {
             fontSize: 18,
-            paddingVertical: 20
+            marginBottom: 8,
+            color: "gray",
       },
-      typeItemDescView: {
-            flexDirection: 'row',
+      listItemDesc: {
+            height: 46,
+            fontSize: 16,
+            color: "gray",
+            marginBottom: 8
       },
-      descViewItem: {
-            flex: 1
-      },
-      typeItemDesc: {
-            fontSize: 14,
-            color: 'gray'
-
-      },
-      typeItemDateView: {
-            alignItems: 'flex-end'
+      listItemDate: {
+            fontSize: 12,
+            color: "gray"
       },
       modalTextView: {
 

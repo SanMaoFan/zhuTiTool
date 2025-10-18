@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react'
 
 // components
-import { View, Text, StyleSheet, ToastAndroid, Button } from 'react-native'
+import { View, Text, StyleSheet, Button } from 'react-native'
 import LoadingEle from '@/components/LoadingEle'
+import AndroidToastEle from '@/components/AndroidToastEle'
 
 // api
 import { getTypeInfo } from '@/api/type'
@@ -105,10 +106,10 @@ export default function DetailsEle({ curType, curId, resetDialog }: PropsInterfa
                 setDetailsData(dataObj)
             } else {
                 console.log("请求失败：", message)
-                ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                AndroidToastEle('请求失败！')
             }
         } catch (e) {
-            ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+            AndroidToastEle('网络出错，请稍后再试！')
             console.log('get details error:', e)
         } finally {
             setLoading(false)

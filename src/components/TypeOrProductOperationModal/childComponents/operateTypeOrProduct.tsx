@@ -3,11 +3,12 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 
 // components
-import { View, SafeAreaView, ScrollView, Text, StyleSheet, Button, Dimensions, TextInput, ToastAndroid } from 'react-native'
+import { View, SafeAreaView, ScrollView, Text, StyleSheet, Button, Dimensions, TextInput } from 'react-native'
 import { Tab, TabView, Icon, Input, CheckBox } from '@rneui/themed'
 import { Formik } from 'formik'
 import { Picker } from '@react-native-picker/picker'
 import LoadingEle from '@/components/LoadingEle'
+import AndroidToastEle from '@/components/AndroidToastEle'
 
 // api
 import { getTypeList, addTypeItem, updateTypeItem, getTypeInfo } from '@/api/type'
@@ -24,9 +25,9 @@ interface Props {
 
 interface FormData {
       name: string
-      descript?: string 
-      parentId?: string 
-      id?: string 
+      descript?: string
+      parentId?: string
+      id?: string
 }
 
 interface FormValues {
@@ -92,7 +93,7 @@ export default function OperateTypeOrProduct({
                               break
                         // 请求分类详情
                         case 'updateType':
-                              await getTypeDetail()
+                              await getTypeDetail(() => { })
                               break
                         case 'add':
                               await getTypeListData()
@@ -104,8 +105,8 @@ export default function OperateTypeOrProduct({
                         name, typeItem, descriptions
                   })
             } catch (e) {
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log('getInfo error: ', e)
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
             } finally {
                   setShowLoading(false)
             }
@@ -113,7 +114,7 @@ export default function OperateTypeOrProduct({
       }
 
       // 请求物品详情
-      async function getProductDetail(callback) {
+      async function getProductDetail(callback: (data) => void) {
             try {
                   const { data, status: productResultStatus } = await getProductInfo(curEditId as string)
                   if (200 === productResultStatus) {
@@ -125,10 +126,11 @@ export default function OperateTypeOrProduct({
                         })
 
                   } else {
-                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('请求失败！')
                   }
             } catch (e) {
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  AndroidToastEle('网络出错，请稍后再试！')
+                  console.log('getProductDetail error:', e)
 
             }
 
@@ -147,11 +149,11 @@ export default function OperateTypeOrProduct({
                               typeItem: ''
                         })
                   } else {
-                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('请求失败！')
                   }
             } catch (e) {
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
-
+                  AndroidToastEle('网络出错，请稍后再试！')
+                  console.log('getTypeDetails error:', e)
             }
       }
 
@@ -171,11 +173,11 @@ export default function OperateTypeOrProduct({
                               })
                         })
                   } else {
-                        ToastAndroid.show('分类列表请求失败！', ToastAndroid.SHORT)
+                        AndroidToastEle('分类列表请求失败！')
                   }
             } catch (e) {
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log('getInfo error: ', e)
-                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
             }
       }
       // 提交表单
@@ -209,19 +211,19 @@ export default function OperateTypeOrProduct({
                   console.log('请求的方法：', requestFn)
                   const { status, message } = await requestFn(objParams)
                   if (200 === status) {
-                        ToastAndroid.showWithGravity((['updateProduct', 'updateType'].includes(curDialogType) ? '修改' : '新增') + '成功！', ToastAndroid.SHORT, ToastAndroid.TOP)
+                        AndroidToastEle((['updateProduct', 'updateType'].includes(curDialogType) ? '修改' : '新增') + '成功！')
                         if (curTypeId === objParams?.parentId) {
                               resetRequest()
                         } else {
                               resetDialog()
                         }
                   } else {
-                        ToastAndroid.showWithGravity('请求失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
+                        AndroidToastEle('请求失败！')
                         console.log('message: ', message)
                   }
             } catch (e) {
+                  AndroidToastEle('网络出错，请稍后再试！')
                   console.log("submit form error: ", e)
-                  ToastAndroid.showWithGravity('提交失败！', ToastAndroid.SHORT, ToastAndroid.TOP)
             } finally {
                   setShowLoading(false)
             }

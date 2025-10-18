@@ -13,3 +13,27 @@ export const WINDOW_HEIGHT = WINDOW_DIMENSIONS.height;
 // 根据当前环境获取状态栏高度
 export const STATUS_BAR_HEIGHT =
   'android' === Platform.OS ? StatusBar.currentHeight : StatusBarManager.HEIGHT;
+
+
+
+
+
+  // interface 
+  // 分类类型
+export interface TypeInterface {
+      typeId: string
+      typeName: string
+      createDate: string
+      typeDescript: string
+      isDel: number
+}
+
+// 物品类型
+export interface ProductInterface {
+      productId: string
+      productName: string
+      createDate: string
+      productDescript: string
+      parentId: string
+      isDel: number
+}
