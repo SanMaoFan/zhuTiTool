@@ -4,6 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useState } from 'react'
 
 // components
+import {
+      View,
+      StyleSheet
+} from 'react-native'
 // 物品管理组件
 import ProductManagement from '../ProductManagement'
 // 分类管理
@@ -41,7 +45,7 @@ export default function ProductManagementRouter() {
 
 
       return (
-            <>
+            <View View style={styles.container}>
                   <Stack.Navigator initialRouteName="ProductManagement">
                         {
                               routerData.map(item => {
@@ -54,6 +58,12 @@ export default function ProductManagementRouter() {
                               })
                         }
                   </Stack.Navigator>
-            </>
+            </View>
       )
 }
+
+const styles = StyleSheet.create({
+      container: {
+            flex: 1,
+      }
+})

@@ -11,8 +11,8 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 import LoadingEle from '@/components/LoadingEle'
 import RenderListRightEle from './components/listItemRightActions'
 import HandleRootView from '@/components/HandleRootView'
-import OperateTypeOrProduct from './components/operateTypeOrProduct'
-import DetailsEle from './components/detailsEle'
+
+import TypeOrProductOperationModal from '@/components/TypeOrProductOperationModal'
 
 // style
 import commonStyles from '@/common/styles'
@@ -38,12 +38,9 @@ import { type typeInterface, type productInterface } from './js/data'
 
 
 
-
 /**
  * 开发计划
  * - 完成列表中下拉、上拉刷新功能
- * - 完善点击分类切换列表功能
- * - 开发点击列表展示详情功能
  * - 完善列表删除功能（删除后，怎么恢复数据共条数和分页的关系？）
  */
 
@@ -61,7 +58,7 @@ export default function Home({ navigation }) {
 
       // 分类列表
       const [assortList, setAssortList] = useState<typeInterface[]>([])
-      // 当前分类 id
+      // 当前分类/物品 id
       const [curTypeId, setCurTypeId] = useState("")
 
       // 商品列表
@@ -95,7 +92,7 @@ export default function Home({ navigation }) {
                         })
                         callback?.(list)
                   } else {
-
+                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
                   }
             } catch (e) {
                   ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
@@ -126,7 +123,7 @@ export default function Home({ navigation }) {
                         // 判断是否请求回了所有数据
                         setIsPageEnd((curProductPage * 10 + count) >= total)
                   } else {
-
+                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
                   }
             } catch (e) {
                   ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
@@ -195,7 +192,7 @@ export default function Home({ navigation }) {
                         getProudctListFn({ parentId: curTypeId })
                         resetDialog()
                   } else {
-
+                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
                   }
             } catch (e) {
                   ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
@@ -273,10 +270,10 @@ export default function Home({ navigation }) {
                                           }}
                                     >
                                           <TouchableOpacity onPress={() => {
-                                                      setShowModal(true)
-                                                      // 点击物品展示详情
-                                                      setCurOperationType('details')
-                                                      setCurEditId(info.item.key)
+                                                setShowModal(true)
+                                                // 点击物品展示详情
+                                                setCurOperationType('details')
+                                                setCurEditId(info.item.key)
 
                                                 // setShowLoading(true)
                                                 // setTimeout(() => {
@@ -311,7 +308,6 @@ export default function Home({ navigation }) {
                               ListEmptyComponent={() => <View style={styles.productEmptyOrPageEnd}>
                                     <Text>暂无数据</Text>
                               </View>}
-                              // 未成功
                               ListFooterComponent={(): any => {
                                     return isPageEnd && !isEmptyList ?
                                           <Text>没有更多数据了~</Text> : <></>
@@ -322,28 +318,19 @@ export default function Home({ navigation }) {
                   </SafeAreaView>
 
                   {/* 弹窗 -- 新增、物品编辑  */}
-                  <Modal animationType='slide'
-                        transparent={false}
-                        visible={showModal}
-                        onRequestClose={() => setShowModal(false)}
-                  >
-                        <View style={styles.modalTextView}>
-                              <Text style={styles.modalTitle}>{'add' === curOperationType ? '新增' : ['updateType', 'updateProduct'].includes(curOperationType) ? '编辑' : 'details' === curOperationType ? '详情' : ''}</Text>
+                  <TypeOrProductOperationModal
+                        openModal={showModal}
+                        editId={curEditId}
+                        typeId={curTypeId}
+                        operationType={curOperationType}
+                        infoType='product'
+                        resetDialogCallback={resetDialog}
+                        resetRequestCallback={resetRequestCurData}
+                        onRequestClose={() => {
+                              setShowModal(false)
+                        }}
+                  ></TypeOrProductOperationModal>
 
-                        </View>
-                        {
-                              ['add', 'updateType', 'updateProduct'].includes(curOperationType) ? <OperateTypeOrProduct type={curOperationType}
-                                    editId={curEditId}
-                                    resetRequest={resetRequestCurData}
-                                    resetDialog={resetDialog}
-                                    curTypeId={curTypeId}
-                              ></OperateTypeOrProduct>
-                                    : ['details'].includes(curOperationType) ? <DetailsEle curType='product' curId={curEditId}
-                                          resetDialog={resetDialog}></DetailsEle> : <></>
-                        }
-                        {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
-
-                  </Modal>
 
                   {/* 浮动按钮 */}
                   <SpeedDial
@@ -376,7 +363,7 @@ export default function Home({ navigation }) {
                                     />
                               }}
                               color={basicBackgroundColor}
-                              title='分类管理'
+                              title='分类与物品'
                               onPress={() => {
                                     navigation.navigate('TypeManagement')
                                     setOpenSpeedDial(false)
@@ -476,18 +463,6 @@ const styles = StyleSheet.create({
             fontSize: 16,
             color: "#717171",
             alignItems: 'center'
-      },
-      modalTextView: {
-
-      },
-      modalTitle: {
-            paddingVertical: 20,
-            paddingHorizontal: 10,
-            fontSize: 24,
-            fontWeight: '500',
-            color: 'white',
-            backgroundColor: '#257BB1'
-
       },
       fabIconItem: {
             fontSize: 10

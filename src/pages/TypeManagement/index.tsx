@@ -1,23 +1,32 @@
 // plugins
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 // components
-import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Modal, Dimensions } from 'react-native'
-import { SearchBar, SpeedDial } from '@rneui/themed'
+import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Modal, Dimensions, ToastAndroid } from 'react-native'
+import { SearchBar, SpeedDial, Dialog } from '@rneui/themed'
 import HandleRootView from '@/components/HandleRootView'
 import RenderListRightEle from '../ProductManagement/components/listItemRightActions'
-import { Dialog } from '@rneui/themed'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
-import OperateTypeOrProduct from './components/operateTypeOrProduct'
+import TypeOrProductOperationModal from '@/components/TypeOrProductOperationModal'
+import { IconNode } from '@rneui/base';
+import LoadingEle from '@/components/LoadingEle'
 
-
-
+// api
+import { getTypeList } from '@/api/type'
+import { getProductList, delProductItem } from '@/api/product'
 
 // style
-import commonStyles from '@/common/styles'
+import commonStyles, { basicBackgroundColor } from '@/common/styles'
+
+
+
+/**
+ * 
+ * 开发任务
+ * 完善删除时的提示
+ */
 
 export default function TypeManagement() {
-
 
       // ref
       const JSearchBar = useRef(null)
@@ -27,6 +36,8 @@ export default function TypeManagement() {
       const [searchVal, setSearchVal] = useState('')
       // loading
       const [showLoading, setShowLoading] = useState(false)
+      // 当前查看列表的类型
+      const [curListType, setCurListType] = useState('type')
       // 列表数据
       const [listData, setListData] = useState([
             {
@@ -64,15 +75,25 @@ export default function TypeManagement() {
                   title: '测1试'
             }, {
                   key: '26x',
-                  title: '测1试'
+                  title: 'adfasdfasdfasd'
             }
       ])
+      // 商品/物品列表分页
+      const [curProductPage, setProductPage] = useState(1)
+      // 是否空列表
+      const [isEmptyList, setIsEmptyList] = useState(false)
+      // 是否已经请求回了所有数据
+      const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
       // 当前浮动按钮点击的操作类型
       const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'typeManagement' | 'update' | 'details'>('')
+      // 浮动按钮是否展开
+      const [openSpeedDial, setOpenSpeedDial] = useState(false)
       // 是否显示弹窗
       const [showModal, setShowModal] = useState(false)
       // 当前 dialog 作用的类型
       const [curDialogType, setCurDialogType] = useState<string>('')
+      // 当前分类/物品 id
+      const [curTypeId, setCurTypeId] = useState("")
       // 确认删除的弹窗
       const [showDelDialog, setShowDelDialog] = useState<boolean>(false)
       // 当前删除的分类 id
@@ -101,16 +122,60 @@ export default function TypeManagement() {
             setCurEditId('')
       }
 
+      // 获取列表
+      async function getListData(searchParams:{ page?: number, pageNo?: number, name?:string }) {
+            try {
+                  setShowLoading(true)
+                  const requestFn = 'type' === curListType ? getTypeList : getProductList
+                  const { data: { list, total = 0, count = 0 }, status } = await requestFn({data: {name: searchParams.name?.trim()}})
+                  if (200 === status) {
+                        setListData([])
+                        console.log('获取数据', list)
+                        // setListData((oldList) => {
+                        //       if (!searchParams.page || searchParams.page === 1) {
+                        //             return [...list]
+                        //       } else {
+                        //             return oldList.concat([...list])
+                        //       }
+                        // })
+                        // 是否空数据
+                        setIsEmptyList(list.length === 0)
+                        // 判断是否请求回了所有数据
+                        setIsPageEnd((curProductPage * 10 + count) >= total)
+                  } else {
+                        ToastAndroid.show('请求失败！', ToastAndroid.SHORT)
+                  }
+            } catch (e) {
+                  ToastAndroid.showWithGravity('网络出错，请稍后再试', ToastAndroid.SHORT, ToastAndroid.TOP)
+                  console.log('get list error:', e)
+            } finally {
+                  setShowLoading(false)
+            }
+      }
+
       // 删除分类
       function handleDelType() {
             const id = curEditId
             console.log('要删除的id', id)
             resetDialog()
       }
+      // 重新请求当前数据
+      function resetRequestCurData() {
+            setShowModal(false)
+            setCurDialogType("")
+            setProductPage(1)
+      }
+
+
+      // effect
+      useEffect(() => {
+            getListData({})
+      }, [])
 
 
       return <View style={styles.container}>
-
+            {/* loading */}
+            <LoadingEle loading={showLoading}></LoadingEle>
             {/* 搜索栏 */}
             <SearchBar
                   ref={JSearchBar}
@@ -173,49 +238,83 @@ export default function TypeManagement() {
                         }}
                         data={listData}
                         keyExtractor={item => item.key}
-
+                        ListEmptyComponent={() => <View style={styles.productEmptyOrPageEnd}>
+                              <Text>暂无数据</Text>
+                        </View>}
+                        ListFooterComponent={(): any => {
+                              return isPageEnd && !isEmptyList ?
+                                    <Text>没有更多数据了~</Text> : <></>
+                        }}
+                        ListFooterComponentStyle={styles.productEmptyOrPageEnd}
                   ></FlatList>
             </SafeAreaView>
 
             {/* 浮动按钮 */}
-            <TouchableOpacity style={[styles.floatBtn, commonStyles.basicBackgroundColor]} onPress={() => {
-                  setCurOperationType('add')
-                  setShowModal(true)
-            }}>
-                  <AntDesignIcon
-                        name='plus'
-                        size={20}
-                        color='#fff'
+            <SpeedDial
+                  isOpen={openSpeedDial}
+                  color={basicBackgroundColor}
+                  icon={{ name: 'edit', color: '#fff' }}
+                  openIcon={{ name: 'close', color: '#fff' }}
+                  onOpen={() => setOpenSpeedDial(!openSpeedDial)}
+                  onClose={() => setOpenSpeedDial(!openSpeedDial)}
+            >
+                  <SpeedDial.Action
+                        icon={(): () => IconNode => {
+                              return <AntDesignIcon
+                                    name='plus'
+                                    size={20}
+                                    color='#fff'
+                              />
+                        }}
+                        color={basicBackgroundColor}
+                        title='新增'
+                        onPress={() => {
+                              // setCurOperationType('add')
+                              // setShowModal(true)
+                        }}
+
                   />
-            </TouchableOpacity>
+                  <SpeedDial.Action
+                        icon={(): () => IconNode => {
+                              return <AntDesignIcon
+                                    name='appstore-o'
+                                    size={20}
+                                    color='#fff'
+                              />
+                        }}
+                        color={basicBackgroundColor}
+                        title='切换成分类'
+                        onPress={() => {
+
+                              // 其他
+
+                        }}
+
+                  />
+
+            </SpeedDial>
 
             {/* 弹窗 -- 新增、编辑  */}
-            <Modal animationType='slide'
-                  transparent={false}
-                  visible={showModal}
-                  onRequestClose={() => setShowModal(false)}
-            >
-                  <View style={styles.modalTextView}>
-                        <Text style={styles.modalTitle}>{'add' === curOperationType ? '新增' : 'update' === curOperationType ? '编辑' : 'details' === curOperationType ? '详情' : ''}</Text>
-
-                  </View>
-                  {
-                        ['add', 'update'].includes(curOperationType) ? <OperateTypeOrProduct setShowModal={setShowModal} type={curOperationType}
-                              id={curEditId}
-                        ></OperateTypeOrProduct>
-                              : <></>
-                  }
-                  {/* <Button onPress={() => setShowModal(false)} title="关闭弹窗"></Button> */}
-
-            </Modal>
+            <TypeOrProductOperationModal
+                  openModal={showModal}
+                  editId={curEditId}
+                  typeId={curTypeId}
+                  operationType={curOperationType}
+                  infoType='product'
+                  resetDialogCallback={resetDialog}
+                  resetRequestCallback={resetRequestCurData}
+                  onRequestClose={() => {
+                        setShowModal(false)
+                  }}
+            ></TypeOrProductOperationModal>
 
             {/* 确认删除弹窗 */}
             <Dialog
                   isVisible={showDelDialog}
                   onBackdropPress={resetDialog}
             >
-                  <Dialog.Title title={'del' === curDialogType ? '确认删除吗？' : ''} />
-                  <View><Text>删除这里的东西</Text></View>
+                  <Dialog.Title title={'del' === curDialogType ? '删除' : ''} />
+                  <View><Text>确认删除吗？</Text></View>
                   <Dialog.Actions>
                         <Dialog.Button title="确定" onPress={() => {
                               console.log('删除', curEditId)
@@ -238,14 +337,16 @@ export default function TypeManagement() {
 
 const styles = StyleSheet.create({
       container: {
-
+            flex: 1,
+            // flexDirection: 'row'
       },
       searchContainer: {
             borderTopColor: 'transparent',
             borderBottomColor: 'transparent'
       },
       listContainer: {
-            height: Dimensions.get('window').height - 170,
+            height: Dimensions.get('window').height - 192,
+            // backgroundColor: 'red'
       },
 
       typeItem: {
@@ -271,16 +372,6 @@ const styles = StyleSheet.create({
       typeItemDateView: {
             alignItems: 'flex-end'
       },
-      floatBtn: {
-            position: 'absolute',
-            bottom: 10,
-            right: 20,
-            height: 56,
-            width: 56,
-            borderRadius: '50%',
-            justifyContent: 'center',
-            alignItems: 'center'
-      },
       modalTextView: {
 
       },
@@ -292,6 +383,13 @@ const styles = StyleSheet.create({
             color: 'white',
             backgroundColor: '#257BB1'
 
+      },
+      // 物品列表为空
+      productEmptyOrPageEnd: {
+            padding: 20,
+            fontSize: 16,
+            color: "#717171",
+            alignItems: 'center'
       },
       fabIconItem: {
             fontSize: 10
