@@ -6,6 +6,10 @@ import { View, StyleSheet } from 'react-native'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import Feather from 'react-native-vector-icons/Feather'
 
+// custom components
+import CustomStatusBarEle from '@/components/CustomStatusBarEle'
+
+
 import ProductManagementRouter from '../ProductManagementRouter'
 import User from '../User'
 
@@ -66,6 +70,8 @@ export default function HomeBottomTab() {
       const BottomTabNavigationCom = createBottomTabNavigator()
 
       return <View style={styles.container}>
+            {/* 顶部导航栏 */}
+                  <CustomStatusBarEle />
             <BottomTabNavigationCom.Navigator initialRouteName='ProductManagementRouter'>
                   {
                         tabBarRenderData.map(item => {

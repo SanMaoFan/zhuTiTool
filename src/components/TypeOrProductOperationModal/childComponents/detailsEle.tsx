@@ -129,7 +129,9 @@ export default function DetailsEle({ curType, curId, resetDialog }: PropsInterfa
         <View style={styles.container}>
             {/* loading */}
             <LoadingEle loading={isLoading}></LoadingEle>
-
+            <View style={styles.item}>
+                <Text>类型：{'type' === curType ? '分类' : '物品'}</Text>
+            </View>
             {
                 reloadData.map(item => {
                     return <View key={item.key} style={styles.item}>

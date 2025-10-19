@@ -1,5 +1,5 @@
 // plugins
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, ReactNode } from 'react'
 
 // components
 import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Modal, Dimensions } from 'react-native'
@@ -33,12 +33,17 @@ export default function TypeManagement() {
 
       // ref
       const JSearchBar = useRef(null)
+      let JFlatList = useRef<ReactNode>()
 
       // state
       // 搜索词
       const [searchVal, setSearchVal] = useState('')
       // loading
       const [showLoading, setShowLoading] = useState(false)
+      // 是否第一次渲染
+      const [isFirstReload, setIsFirstReload] = useState(true)
+      // 列表顶部下拉刷新的状态
+      const [isRefreshing] = useState(false)
       // 当前查看列表的类型
       const [curListType, setCurListType] = useState<'type' | 'product'>('type')
       // 列表数据
@@ -49,50 +54,79 @@ export default function TypeManagement() {
       const [isEmptyList, setIsEmptyList] = useState(false)
       // 是否已经请求回了所有数据
       const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
-      // 当前浮动按钮点击的操作类型
-      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
+      // 当前弹窗的操作类型
+      const [curModalType, setCurModalType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
       // 浮动按钮是否展开
       const [openSpeedDial, setOpenSpeedDial] = useState(false)
       // 是否显示弹窗
       const [showModal, setShowModal] = useState(false)
-      // 当前 dialog 作用的类型
+      // 当前 dialog 作用的类型 -- 删除
       const [curDialogType, setCurDialogType] = useState<string>('')
-      // 当前分类/物品 id
-      const [curTypeId, setCurTypeId] = useState("")
       // 确认删除的弹窗
       const [showDelDialog, setShowDelDialog] = useState<boolean>(false)
-      // 当前删除的分类 id
+      // 当前编辑、删除的分类 id
       const [curEditId, setCurEditId] = useState<string>('')
 
 
       // function
-      // 设置 dialog
+      // 设置 新增、编辑、详情 Modal 弹窗
       function setDialog(type: string, id: string) {
+            setCurEditId(id)
             switch (type) {
+                  case 'add':
+                        setCurModalType('add')
+                        setCurModalType(type)
+                        setShowModal(true)
+                        setOpenSpeedDial(false)
+                        break
                   case 'del':
                         setCurDialogType('del')
                         setShowDelDialog(true)
                         break
                   case 'update':
-                        setCurOperationType(() => {
+                        setCurModalType(() => {
                               return 'type' === curListType ? 'updateType' : 'updateProduct'
                         })
                         setShowModal(true)
                         break
+                  case 'details':
+                        setCurModalType('details')
+                        setShowModal(true)
+                        break
             }
-            setCurEditId(id)
       }
 
       // 重置 dialog
       function resetDialog() {
+            setOpenSpeedDial(false)
+            setShowModal(false)
             setShowDelDialog(false)
             setCurEditId('')
       }
+
 
       // 进行搜索
       function handleSearch() {
             setProductPage(1)
             getListData({ page: 1, name: searchVal, listType: curListType })
+      }
+
+      // 列表顶部下拉刷新
+      function onListRefresh() {
+            setProductPage(1)
+            getListData({ listType: curListType })
+      }
+      // 列表底部刷新
+      function onListEndReached() {
+            if (!isPageEnd && !isEmptyList && !isFirstReload) {
+                  setProductPage(page => {
+                        const curPage = page + 1
+                        setProductPage(2)
+                        getListData({ page: curPage, name: searchVal, listType: curListType })
+                        return curPage
+                  })
+            }
+
       }
 
       // 获取列表
@@ -102,6 +136,7 @@ export default function TypeManagement() {
                   { listType: 'type', page: 1 }
       ) {
             try {
+                  console.log('当前搜索条件', searchParams)
                   setShowLoading(true)
                   const requestFn = 'type' === searchParams.listType ? getTypeList : getProductList
                   const { data: { list, total = 0, count = 0 }, status } = await requestFn({
@@ -111,9 +146,8 @@ export default function TypeManagement() {
                         }
                   })
                   if (200 === status) {
+                        setIsFirstReload(false)
                         const isType = 'type' === searchParams.listType
-                        console.log('获取数据', list)
-
                         const newData = list.map(item => {
                               const {
                                     typeId,
@@ -157,13 +191,15 @@ export default function TypeManagement() {
       // 删除数据
       async function handleDelData() {
             try {
+                  setShowLoading(true)
                   const requestFn = 'type' === curListType ? delTypeItem : delProductItem
-                  const { status } = await requestFn(curEditId)
+                  const { status, message } = await requestFn(curEditId)
                   if (200 === status) {
                         AndroidToastEle('删除成功！')
                         resetRequestCurData()
                   } else {
-
+                        AndroidToastEle('删除失败！');
+                        console.log(message)
                   }
             } catch (e) {
                   AndroidToastEle('网络出错，请稍后再试！')
@@ -175,18 +211,27 @@ export default function TypeManagement() {
       }
       // 重新请求当前数据
       function resetRequestCurData() {
-            setOpenSpeedDial(false)
-            setShowModal(false)
-            setShowDelDialog(false)
-            setCurDialogType("")
-            setProductPage(1)
-            getListData({ page: 1, name: searchVal, listType: curListType })
+            try {
+                  setOpenSpeedDial(false)
+                  setShowModal(false)
+                  setShowDelDialog(false)
+                  setCurEditId('')
+                  if (['updateType', 'updateProduct', 'add'].includes(curModalType) || 'del' === curDialogType) {
+                        setProductPage(1)
+                        getListData({ page: 1, name: searchVal, listType: curListType })
+                        setCurDialogType('')
+                        setCurModalType('')
+                  }
+
+            } catch (e) {
+                  console.log('reset quest error:', e)
+            }
       }
 
 
       // effect
       useEffect(() => {
-            getListData({})
+            getListData()
       }, [])
 
 
@@ -212,9 +257,11 @@ export default function TypeManagement() {
             {/* 列表 */}
             <SafeAreaView style={styles.listContainer}>
                   <FlatList
+                        ref={(flatList) => { JFlatList = flatList }}
                         renderItem={({ item }) => {
                               // console.log('数据', info)
-                              return <HandleRootView rootKey={item.key}
+                              return <HandleRootView
+                                    rootKey={item.key}
                                     ReanimatedSwipeableConfig={{
                                           friction: 2,
                                           rightThreshold: 20,
@@ -223,11 +270,8 @@ export default function TypeManagement() {
                               >
                                     <TouchableOpacity
                                           onPress={() => {
-                                                setShowLoading(true)
-                                                setTimeout(() => {
-                                                      setShowLoading(false)
-                                                      setShowModal(true)
-                                                }, 2000)
+                                                setDialog('details', item.key)
+
                                           }}>
 
 
@@ -254,6 +298,14 @@ export default function TypeManagement() {
                                     <Text>没有更多数据了~</Text> : <></>
                         }}
                         ListFooterComponentStyle={styles.productEmptyOrPageEnd}
+                        // 顶部下拉刷新的状态
+                        refreshing={isRefreshing}
+                        // 顶部下拉刷新事件
+                        onRefresh={onListRefresh}
+                        // 滚动到底部的事件
+                        onEndReached={onListEndReached}
+                        // 距离底部的距离--在范围内会触发 onEndReached 事件
+                        onEndReachedThreshold={0.5}
                   ></FlatList>
             </SafeAreaView>
 
@@ -277,8 +329,7 @@ export default function TypeManagement() {
                         color={basicBackgroundColor}
                         title='新增'
                         onPress={() => {
-                              // setCurOperationType('add')
-                              // setShowModal(true)
+                              setDialog('add', '')
                         }}
 
                   />
@@ -294,6 +345,12 @@ export default function TypeManagement() {
                         title={`切换成${'type' === curListType ? '物品' : '分类'}`}
                         onPress={() => {
                               setCurListType(type => {
+                                    JFlatList?.scrollToIndex({
+                                          index: 0,
+                                          animate: true,
+                                          viewOffset: 0,
+                                          viewPosition: 0
+                                    })
                                     const newType = 'type' === type ? 'product' : 'type'
                                     // 关闭浮窗
                                     setOpenSpeedDial(!openSpeedDial)
@@ -312,9 +369,8 @@ export default function TypeManagement() {
             <TypeOrProductOperationModal
                   openModal={showModal}
                   editId={curEditId}
-                  typeId={curTypeId}
-                  operationType={curOperationType}
-                  infoType='product'
+                  operationType={curModalType}
+                  infoType={curListType}
                   resetDialogCallback={resetDialog}
                   resetRequestCallback={resetRequestCurData}
                   onRequestClose={() => {
@@ -354,7 +410,7 @@ const styles = StyleSheet.create({
             borderBottomColor: 'transparent'
       },
       listContainer: {
-            height: Dimensions.get('window').height - 192,
+            height: Dimensions.get('window').height - 112,
             // backgroundColor: 'red'
       },
       listItem: {

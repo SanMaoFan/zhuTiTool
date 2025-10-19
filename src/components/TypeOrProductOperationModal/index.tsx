@@ -12,25 +12,23 @@ import DetailsEle from './childComponents/detailsEle'
 interface PropsInterface {
     openModal: boolean
     editId: string
-    typeId: string
     operationType: string
     infoType: 'type' | 'product'
     resetDialogCallback: () => void
-    resetRequestCallback: () => void
+    resetRequestCallback: (data: any) => void
     onRequestClose: () => void
 }
-
 
 export default function TypeOrProductOperationModal({
     openModal,
     editId,
-    typeId,
     operationType,
     infoType,
     resetDialogCallback,
     resetRequestCallback,
     onRequestClose
 }: PropsInterface) {
+
 
     return (
         <Modal animationType='slide'
@@ -54,9 +52,7 @@ export default function TypeOrProductOperationModal({
                     ? <OperateTypeOrProduct
                         type={operationType}
                         editId={editId}
-                        resetRequest={resetRequestCallback}
-                        resetDialog={resetDialogCallback}
-                        curTypeId={typeId}
+                        submitCallback={resetRequestCallback}
                     ></OperateTypeOrProduct>
                     : ['details'].includes(operationType)
                         ? <DetailsEle curType={infoType} curId={editId}

@@ -16,11 +16,9 @@ import { getProductInfo, addProductItem, updateProductItem } from '@/api/product
 
 
 interface Props {
-      resetRequest: () => void
-      resetDialog: () => void
+      submitCallback: (data: any) => void
       type: string
       editId: string
-      curTypeId: string
 }
 
 interface FormData {
@@ -41,11 +39,9 @@ interface FormValues {
 // 操作类型或商品
 // type 分为： updateProduct, updateType, add 分别代表 编辑物品、编辑分类、新增
 export default function OperateTypeOrProduct({
-      resetRequest,
-      resetDialog,
+      submitCallback,
       type: curDialogType,
       editId,
-      curTypeId,
 }: Props) {
 
       // navigation
@@ -64,16 +60,14 @@ export default function OperateTypeOrProduct({
             return ['updateProduct', 'updateType'].includes(curDialogType)
       })
 
-      // 当前要改动的物品 id
-      const [curEditId, setEditId] = useState<null | string>(null)
 
       // function
       // 请求数据
       async function getInfo() {
             try {
-                  // console.log('当前类型和数据：', type, editId)
                   setShowLoading(true)
                   let name, descriptions, typeItem
+                  console.log('当前数据', curDialogType, editId)
                   switch (curDialogType) {
                         // 请求物品详情、分类列表
                         case 'updateProduct':
@@ -93,17 +87,37 @@ export default function OperateTypeOrProduct({
                               break
                         // 请求分类详情
                         case 'updateType':
-                              await getTypeDetail(() => { })
+                              await getTypeDetail((detailData: {
+                                    name: string
+                                    descriptions: string
+                                    typeItem: string
+                              }) => {
+                                    const { name: typeName,
+                                          descriptions: typeDescript,
+                                          typeItem: productParentId } = detailData
+                                    name = typeName
+                                    descriptions = typeDescript
+                                    typeItem = productParentId
+                              })
                               break
                         case 'add':
                               await getTypeListData()
                               break
                   }
                   // 设置数据
-                  ['updateProduct', 'updateType'].includes(curDialogType) && JFormRef.current?.setValues({
-                        type: 'updateProduct' === curDialogType ? 'product' : 'updateType' === curDialogType ? 'type' : 'type',
-                        name, typeItem, descriptions
-                  })
+                  if (['updateProduct', 'updateType'].includes(curDialogType)) {
+                        JFormRef.current?.setValues({
+                              type: 'updateProduct' === curDialogType ? 'product' : 'updateType' === curDialogType ? 'type' : 'type',
+                              name, typeItem, descriptions
+                        })
+                  } else {
+                        JFormRef.current?.setValues({
+                              type: 'type',
+                              name,
+                              typeItem,
+                              descriptions
+                        })
+                  }
             } catch (e) {
                   AndroidToastEle('网络出错，请稍后再试！')
                   console.log('getInfo error: ', e)
@@ -116,7 +130,7 @@ export default function OperateTypeOrProduct({
       // 请求物品详情
       async function getProductDetail(callback: (data) => void) {
             try {
-                  const { data, status: productResultStatus } = await getProductInfo(curEditId as string)
+                  const { data, status: productResultStatus } = await getProductInfo(editId as string)
                   if (200 === productResultStatus) {
                         const { parentId, productDescript, productName } = data
                         callback?.({
@@ -140,7 +154,7 @@ export default function OperateTypeOrProduct({
       // 请求分类详情
       async function getTypeDetail(callback) {
             try {
-                  const { data, status } = await getTypeInfo(curEditId as string)
+                  const { data, status } = await getTypeInfo(editId as string)
                   if (200 === status) {
                         const { typeName, typeDescript } = data
                         callback?.({
@@ -161,7 +175,7 @@ export default function OperateTypeOrProduct({
       async function getTypeListData() {
             try {
                   // 请求分类数据
-                  const { data: { list }, status: typeResultStatus } = await getTypeList({ pageNo: 100 })
+                  const { data: { list }, status: typeResultStatus } = await getTypeList({ data: { pageNo: 100 } })
                   if (200 === typeResultStatus) {
                         // console.log('分类数据列表, ', list)
                         setTypeList(() => {
@@ -197,7 +211,7 @@ export default function OperateTypeOrProduct({
                               name,
                               descript: descriptions
                         }, 'updateType' === curDialogType && {
-                              id: curEditId
+                              id: editId
                         })
                   } else {
                         objParams = Object.assign({
@@ -205,18 +219,13 @@ export default function OperateTypeOrProduct({
                               descript: descriptions,
                               parentId: typeItem
                         }, 'updateProduct' === curDialogType && {
-                              id: curEditId
+                              id: editId
                         })
                   }
-                  console.log('请求的方法：', requestFn)
                   const { status, message } = await requestFn(objParams)
                   if (200 === status) {
                         AndroidToastEle((['updateProduct', 'updateType'].includes(curDialogType) ? '修改' : '新增') + '成功！')
-                        if (curTypeId === objParams?.parentId) {
-                              resetRequest()
-                        } else {
-                              resetDialog()
-                        }
+                        submitCallback(objParams)
                   } else {
                         AndroidToastEle('请求失败！')
                         console.log('message: ', message)
@@ -233,7 +242,6 @@ export default function OperateTypeOrProduct({
 
       // useEffect
       useEffect(() => {
-            setEditId(editId || null)
             getInfo()
       }, [])
 

@@ -3,13 +3,15 @@ import React, { useState, useEffect, ReactNode } from 'react'
 
 
 // components
-import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable } from 'react-native'
+import { Text, View, ScrollView, Button, StyleSheet, Dimensions, TouchableOpacity, SafeAreaView, VirtualizedList, ActivityIndicator, Modal, Pressable, StatusBar } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { SpeedDial, Dialog, Icon } from '@rneui/themed'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
-import LoadingEle from '@/components/LoadingEle'
 import RenderListRightEle from './components/listItemRightActions'
+
+// custom components
+import LoadingEle from '@/components/LoadingEle'
 import HandleRootView from '@/components/HandleRootView'
 import AndroidToastEle from '@/components/AndroidToastEle'
 
@@ -43,6 +45,7 @@ import { type TypeInterface, type ProductInterface } from '@/utils'
  * 开发计划
  * - 完成列表中下拉、上拉刷新功能
  * - 完善列表删除功能（删除后，怎么恢复数据共条数和分页的关系？）
+ * - 从分类与物品模块出来后，需要重新查询内容
  */
 
 export default function Home({ navigation }) {
@@ -50,12 +53,16 @@ export default function Home({ navigation }) {
 
       // 是否显示loading
       const [showLoading, setShowLoading] = useState(false)
+      // 列表顶部下拉刷新的状态
+      const [isRefreshing] = useState(false)
+      // 是否第一次渲染
+      const [isFirstReload, setIsFirstReload] = useState(true)
       // 是否显示 modal
       const [showModal, setShowModal] = useState(false)
       // 浮动按钮是否展开
       const [openSpeedDial, setOpenSpeedDial] = useState(false)
-      // 当前浮动按钮点击的操作类型
-      const [curOperationType, setCurOperationType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
+      // 当前弹窗的操作类型
+      const [curModalType, setCurModalType] = useState<'' | 'add' | 'updateType' | 'updateProduct' | 'details'>('')
 
       // 分类列表
       const [assortList, setAssortList] = useState<TypeInterface[]>([])
@@ -72,7 +79,7 @@ export default function Home({ navigation }) {
       const [isPageEnd, setIsPageEnd] = useState<boolean>(false)
 
       // 当前 dialog 作用的类型
-      const [curDialogType, setCurDialogType] = useState<string>('')
+      const [curDialogType, setCurDialogType] = useState<'del' | ''>('')
       // 确认删除的弹窗
       const [showDelDialog, setShowDelDialog] = useState<boolean>(false)
       // 当前删除的物品 id
@@ -82,14 +89,14 @@ export default function Home({ navigation }) {
 
       // function
       // 获取分类
-      async function getTypeListFn(callback: (list: typeInterface[]) => void) {
+      async function getTypeListFn(callback: (list: TypeInterface[]) => void) {
             try {
                   setShowLoading(true)
-                  const { data: { list }, status } = await getTypeList({ data: {} })
+                  const { data: { list }, status } = await getTypeList({ data: { pageNo: 100 } })
                   // console.log('getTypeListFn request data:',list, status)
                   if (200 === status) {
                         setAssortList(() => {
-                              return [...(list as typeInterface[])]
+                              return [...(list as TypeInterface[])]
                         })
                         callback?.(list)
                   } else {
@@ -112,6 +119,7 @@ export default function Home({ navigation }) {
                   const { data: { list, total = 0, count = 0 }, status } = await getProductList({ data: searchParams })
                   // console.log('product 请求的数据,', list, status)
                   if (200 === status) {
+                        setIsFirstReload(false)
                         setProductList((oldList) => {
                               if (!searchParams.page || searchParams.page === 1) {
                                     return [...list]
@@ -135,22 +143,21 @@ export default function Home({ navigation }) {
             }
       }
 
-      // 点击操作浮动按钮
-      function clickSpeedDialAction(type: "add") {
-            setCurOperationType(type)
-            setShowModal(true)
-            setOpenSpeedDial(false)
-      }
 
       // 设置 dialog
       function setDialog(type: string, id: string) {
             switch (type) {
+                  case 'add':
+                        setCurModalType(type)
+                        setShowModal(true)
+                        setOpenSpeedDial(false)
+                        break
                   case 'del':
                         setCurDialogType('del')
                         setShowDelDialog(true)
                         break
                   case 'update':
-                        setCurOperationType('updateProduct')
+                        setCurModalType('updateProduct')
                         setShowModal(true)
                         break
             }
@@ -166,6 +173,24 @@ export default function Home({ navigation }) {
             setCurEditId('')
       }
 
+      // 列表顶部下拉刷新
+      function onListRefresh() {
+            setProductPage(1)
+            getProudctListFn({ parentId: curTypeId })
+      }
+      // 列表底部刷新
+      function onListEndReached() {
+            if (!isPageEnd && !isEmptyList && !isFirstReload) {
+                  setProductPage(page => {
+                        const curPage = page + 1
+                        setProductPage(2)
+                        getProudctListFn({ page: curPage, parentId: curTypeId })
+                        return curPage
+                  })
+            }
+
+      }
+
       // 查询物品
       function clickTypeItem(id: string) {
             if (id === curTypeId) return
@@ -175,11 +200,16 @@ export default function Home({ navigation }) {
       }
 
       // 重新请求当前数据
-      function resetRequestCurData() {
-            setShowModal(false)
+      function resetRequestCurData(submitData: any) {
             setCurDialogType("")
-            setProductPage(1)
-            getProudctListFn({ parentId: curTypeId })
+            // 更新当前分类下的物品数据
+            if (curTypeId === submitData.parentId) {
+                  setShowModal(false)
+                  setProductPage(1)
+                  getProudctListFn({ parentId: curTypeId })
+            } else {
+                  resetDialog()
+            }
       }
 
       // 删除物品
@@ -217,6 +247,7 @@ export default function Home({ navigation }) {
 
       return (
             <View style={styles.container}>
+                  
                   {/* 路由跳转 */}
                   {/* <Button title="点击" onPress={() => navigation.navigate('User')} /> */}
 
@@ -273,15 +304,8 @@ export default function Home({ navigation }) {
                                           <TouchableOpacity onPress={() => {
                                                 setShowModal(true)
                                                 // 点击物品展示详情
-                                                setCurOperationType('details')
+                                                setCurModalType('details')
                                                 setCurEditId(info.item.key)
-
-                                                // setShowLoading(true)
-                                                // setTimeout(() => {
-                                                //       setShowLoading(false)
-                                                //       setShowModal(true)
-                                                // }, 2000)
-
                                           }}>
 
                                                 <View style={styles.productItem} key={info.item.key}>
@@ -314,6 +338,14 @@ export default function Home({ navigation }) {
                                           <Text>没有更多数据了~</Text> : <></>
                               }}
                               ListFooterComponentStyle={styles.productEmptyOrPageEnd}
+                              // 顶部下拉刷新的状态
+                              refreshing={isRefreshing}
+                              // 顶部下拉刷新事件
+                              onRefresh={onListRefresh}
+                              // 滚动到底部的事件
+                              onEndReached={onListEndReached}
+                              // 距离底部的距离--在范围内会触发 onEndReached 事件
+                              onEndReachedThreshold={0.5}
                         />
 
                   </SafeAreaView>
@@ -322,8 +354,7 @@ export default function Home({ navigation }) {
                   <TypeOrProductOperationModal
                         openModal={showModal}
                         editId={curEditId}
-                        typeId={curTypeId}
-                        operationType={curOperationType}
+                        operationType={curModalType}
                         infoType='product'
                         resetDialogCallback={resetDialog}
                         resetRequestCallback={resetRequestCurData}
@@ -352,7 +383,7 @@ export default function Home({ navigation }) {
                               }}
                               color={basicBackgroundColor}
                               title='新增'
-                              onPress={() => clickSpeedDialAction('add')}
+                              onPress={() => setDialog('add', '')}
 
                         />
                         <SpeedDial.Action
