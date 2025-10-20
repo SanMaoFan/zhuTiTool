@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 
 // components
 import { View, Text, StyleSheet, Button } from 'react-native'
-import LoadingEle from '@/components/LoadingEle'
-import AndroidToastEle from '@/components/AndroidToastEle'
+import LoadingEle from '@/components/CustomLoadingEle'
+import AndroidToastEle from '@/components/CustomAndroidToastEle'
 
 // api
 import { getTypeInfo } from '@/api/type'

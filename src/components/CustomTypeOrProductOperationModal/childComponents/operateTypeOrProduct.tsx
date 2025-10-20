@@ -7,8 +7,8 @@ import { View, SafeAreaView, ScrollView, Text, StyleSheet, Button, Dimensions, T
 import { Tab, TabView, Icon, Input, CheckBox } from '@rneui/themed'
 import { Formik } from 'formik'
 import { Picker } from '@react-native-picker/picker'
-import LoadingEle from '@/components/LoadingEle'
-import AndroidToastEle from '@/components/AndroidToastEle'
+import LoadingEle from '@/components/CustomLoadingEle'
+import AndroidToastEle from '@/components/CustomAndroidToastEle'
 
 // api
 import { getTypeList, addTypeItem, updateTypeItem, getTypeInfo } from '@/api/type'

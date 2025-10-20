@@ -4,13 +4,13 @@ import { useRef, useState, useEffect, ReactNode } from 'react'
 // components
 import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Modal, Dimensions } from 'react-native'
 import { SearchBar, SpeedDial, Dialog } from '@rneui/themed'
-import HandleRootView from '@/components/HandleRootView'
+import HandleRootView from '@/components/CustomHandleRootView'
 import RenderListRightEle from '../ProductManagement/components/listItemRightActions'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
-import TypeOrProductOperationModal from '@/components/TypeOrProductOperationModal'
+import TypeOrProductOperationModal from '@/components/CustomTypeOrProductOperationModal'
 import { IconNode } from '@rneui/base';
-import LoadingEle from '@/components/LoadingEle'
-import AndroidToastEle from '@/components/AndroidToastEle'
+import LoadingEle from '@/components/CustomLoadingEle'
+import AndroidToastEle from '@/components/CustomAndroidToastEle'
 
 // api
 import { getTypeList, delTypeItem } from '@/api/type'

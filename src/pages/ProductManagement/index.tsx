@@ -11,11 +11,11 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 import RenderListRightEle from './components/listItemRightActions'
 
 // custom components
-import LoadingEle from '@/components/LoadingEle'
-import HandleRootView from '@/components/HandleRootView'
-import AndroidToastEle from '@/components/AndroidToastEle'
+import LoadingEle from '@/components/CustomLoadingEle'
+import HandleRootView from '@/components/CustomHandleRootView'
+import AndroidToastEle from '@/components/CustomAndroidToastEle'
 
-import TypeOrProductOperationModal from '@/components/TypeOrProductOperationModal'
+import TypeOrProductOperationModal from '@/components/CustomTypeOrProductOperationModal'
 
 // style
 import commonStyles from '@/common/styles'
