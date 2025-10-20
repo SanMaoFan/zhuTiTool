@@ -6,9 +6,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
 // components
-import HomeBottomTab from './src/pages/HomeBottomTab'
-import Home from './src/pages/ProductManagement'
-import User from './src/pages/User'
+import LoginPage from '@/pages/Login'
+import HomeBottomTab from '@/pages/HomeBottomTab'
+import Home from '@/pages/ProductManagement'
+import User from '@/pages/User'
+
+// custom -- components
+import CustomStatusBarEle from '@/components/CustomStatusBarEle'
 
 // data
 import { STATUS_BAR_HEIGHT } from './src/utils'
@@ -33,15 +37,15 @@ function App() {
 
   return (
     <View style={styles.container}>
+      {/* <CustomStatusBarEle/> */}
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <SafeAreaView style={[styles.safeArea]}>
-
-      </SafeAreaView>
+      
 
 
       {/* <Text style={{ backgroundColor: 'red' }}>测试文字</Text> */}
       <NavigationContainer>
-        <Stack.Navigator initialRouteName='HomeBottomTab'>
+        <Stack.Navigator initialRouteName='LoginPage'>
+          <Stack.Screen component={LoginPage} name="LoginPage" options={{headerShown: false}}></Stack.Screen>
           <Stack.Screen component={HomeBottomTab} name='HomeBottomTab' options={{ headerShown: false }} />
           {/* <Stack.Screen component={Home} name='Home' options={{ title: 'Home' }} /> */}
           {/* <Stack.Screen component={User} name='User' options={{ title: 'User' }} /> */}
@@ -58,11 +62,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  safeArea: {
-    marginTop: STATUS_BAR_HEIGHT,
-    // borderBottomColor: 'red',
-    // borderBottomWidth: StyleSheet.hairlineWidth
-  }
 });
 
 export default App;

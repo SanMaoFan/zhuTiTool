@@ -45,7 +45,7 @@ export default function ProductManagementRouter() {
 
 
       return (
-            <View View style={styles.container}>
+            <View style={styles.container}>
                   <Stack.Navigator initialRouteName="ProductManagement">
                         {
                               routerData.map(item => {
