@@ -3,14 +3,14 @@
 // 存储的第三方组件
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default class Storage {
+class Storage {
   /**
    * @description 存储数据
    * @param {string} key
    * @param {mixed} value
    * @returns {Promise}
    */
-  static set(key, value) {
+  public set(key: string, value: unknown) {
     return AsyncStorage.setItem(key, JSON.stringify(value));
   }
 
@@ -19,14 +19,14 @@ export default class Storage {
    * @param {string} key
    * @returns {Promise}
    */
-  static get(key) {
+  public get(key: string) {
     return AsyncStorage.getItem(key)
-      .then(value => {
+      .then((value: any) => {
         if (value && '' !== value) {
           return JSON.parse(value);
         }
       })
-      .cathc(() => null);
+      .catch(() => null);
   }
 
   /**
@@ -35,9 +35,9 @@ export default class Storage {
    * @param {mixed} value
    * @returns {Promise}
    */
-  static updateData(key, value) {
+  public updateData(key: string, value: unknown) {
     // 获取数据
-    this.get(key).then(oldData => {
+    this.get(key).then((oldData: unknown) => {
       // 存储数据
       const newValue =
         typeof value === 'string' ? value : Object.assign({}, oldData, value);
@@ -50,7 +50,7 @@ export default class Storage {
    * @param {string} key
    * @returns {Promise}
    */
-  static delete(key) {
+  public delete(key: string) {
     if (null == key) {
       // 如果没有 key，则一次性清空数据
       return AsyncStorage.clear();
@@ -60,3 +60,5 @@ export default class Storage {
     }
   }
 }
+
+export default new Storage()

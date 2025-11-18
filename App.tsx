@@ -44,7 +44,7 @@ function App() {
 
       {/* <Text style={{ backgroundColor: 'red' }}>测试文字</Text> */}
       <NavigationContainer>
-        <Stack.Navigator initialRouteName='LoginPage'>
+        <Stack.Navigator initialRouteName='HomeBottomTab'>
           <Stack.Screen component={LoginPage} name="LoginPage" options={{headerShown: false}}></Stack.Screen>
           <Stack.Screen component={HomeBottomTab} name='HomeBottomTab' options={{ headerShown: false }} />
           {/* <Stack.Screen component={Home} name='Home' options={{ title: 'Home' }} /> */}

@@ -1,4 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios"
+// utils
+import Storage from '@/utils/storage'
 
 
 // 创建实例
@@ -10,8 +12,13 @@ const axiosInterface = axios.create({
 
 // 拦截器
 // 请求前
-axiosInterface.interceptors.request.use((config) => {
-    // console.log('config', config)
+axiosInterface.interceptors.request.use(async (config) => {
+    // 设置 token
+    const token = await Storage.get('token')
+    if(token){
+        config.headers.Authorization=`Bearer ${token}`
+    }
+    console.log('config', config)
     return config
 }, (err) => {
     console.log('request before error: ', err)
