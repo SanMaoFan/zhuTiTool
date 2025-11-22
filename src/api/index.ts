@@ -15,10 +15,10 @@ const axiosInterface = axios.create({
 axiosInterface.interceptors.request.use(async (config) => {
     // 设置 token
     const token = await Storage.get('token')
-    if(token){
-        config.headers.Authorization=`Bearer ${token}`
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
     }
-    console.log('config', config)
+    // console.log('config', config)
     return config
 }, (err) => {
     console.log('request before error: ', err)
@@ -29,7 +29,13 @@ axiosInterface.interceptors.request.use(async (config) => {
 // 请求后
 axiosInterface.interceptors.response.use((res) => {
     // console.log('请求的内容', res)
-    return res.data
+    const { data } = res
+    const { status } = data
+    if (401 === status) {
+        
+    } else {
+        return res.data
+    }
 }, (err) => {
     console.log("response after error:", err)
     return Promise.reject(err)

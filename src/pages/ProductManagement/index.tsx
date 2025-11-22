@@ -88,6 +88,15 @@ export default function Home({ navigation }) {
 
 
       // function
+      // 初始化页面获取数据
+      function initPageData(){
+            getTypeListFn(function (list) {
+                  setProductPage(1)
+                  setCurTypeId(list?.[0]?.typeId)
+                  getProudctListFn({ parentId: list?.[0]?.typeId })
+            })
+      }
+
       // 获取分类
       async function getTypeListFn(callback: (list: TypeInterface[]) => void) {
             try {
@@ -200,14 +209,19 @@ export default function Home({ navigation }) {
       }
 
       // 重新请求当前数据
-      function resetRequestCurData(submitData: any) {
+      function resetRequestCurData(submitData: any, isAddType: boolean) {
             setCurDialogType("")
-            // 更新当前分类下的物品数据
-            if (curTypeId === submitData.parentId) {
+            // 是否新增了分类
+            if(isAddType){
+                  setShowModal(false)
+                  initPageData()
+            }else if (curTypeId === submitData.parentId) {
+                  // 更新当前分类下的物品数据
                   setShowModal(false)
                   setProductPage(1)
                   getProudctListFn({ parentId: curTypeId })
-            } else {
+            } else{
+                  // 不请求
                   resetDialog()
             }
       }
@@ -236,11 +250,7 @@ export default function Home({ navigation }) {
 
       // effect
       useEffect(() => {
-            getTypeListFn(function (list) {
-                  setProductPage(1)
-                  setCurTypeId(list?.[0]?.typeId)
-                  getProudctListFn({ parentId: list?.[0]?.typeId })
-            })
+            initPageData()
       }, [])
 
 

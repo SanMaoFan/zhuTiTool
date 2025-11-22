@@ -15,7 +15,7 @@ interface PropsInterface {
     operationType: string
     infoType: 'type' | 'product'
     resetDialogCallback: () => void
-    resetRequestCallback: (data: any) => void
+    resetRequestCallback: (data: any, isAddType: boolean) => void
     onRequestClose: () => void
 }
 

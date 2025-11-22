@@ -16,7 +16,7 @@ import { getProductInfo, addProductItem, updateProductItem } from '@/api/product
 
 
 interface Props {
-      submitCallback: (data: any) => void
+      submitCallback: (data: any, isAddType: boolean) => void
       type: string
       editId: string
 }
@@ -31,7 +31,7 @@ interface FormData {
 interface FormValues {
       descriptions?: string
       name: string
-      type: 'type' | 'product'
+      type: 'type' | 'product' | ''
       typeItem?: string
 }
 
@@ -67,7 +67,7 @@ export default function OperateTypeOrProduct({
             try {
                   setShowLoading(true)
                   let name, descriptions, typeItem
-                  console.log('当前数据', curDialogType, editId)
+                  // console.log('当前数据', curDialogType, editId)
                   switch (curDialogType) {
                         // 请求物品详情、分类列表
                         case 'updateProduct':
@@ -101,7 +101,8 @@ export default function OperateTypeOrProduct({
                               })
                               break
                         case 'add':
-                              await getTypeListData()
+                              const list = await getTypeListData()
+                              typeItem = list[0]?.value
                               break
                   }
                   // 设置数据
@@ -173,25 +174,27 @@ export default function OperateTypeOrProduct({
 
       // 请求分类列表
       async function getTypeListData() {
+            let newTypeList = []
             try {
                   // 请求分类数据
                   const { data: { list }, status: typeResultStatus } = await getTypeList({ data: { pageNo: 100 } })
                   if (200 === typeResultStatus) {
                         // console.log('分类数据列表, ', list)
-                        setTypeList(() => {
-                              return list.map(item => {
-                                    return {
-                                          value: item.typeId,
-                                          name: item.typeName
-                                    }
-                              })
+                        newTypeList = list.map(item => {
+                              return {
+                                    value: item.typeId,
+                                    name: item.typeName
+                              }
                         })
+                        setTypeList(newTypeList)
                   } else {
                         AndroidToastEle('分类列表请求失败！')
                   }
             } catch (e) {
                   AndroidToastEle('网络出错，请稍后再试！')
                   console.log('getInfo error: ', e)
+            } finally {
+                  return newTypeList
             }
       }
       // 提交表单
@@ -225,7 +228,7 @@ export default function OperateTypeOrProduct({
                   const { status, message } = await requestFn(objParams)
                   if (200 === status) {
                         AndroidToastEle((['updateProduct', 'updateType'].includes(curDialogType) ? '修改' : '新增') + '成功！')
-                        submitCallback(objParams)
+                        submitCallback(objParams, 'type' === type ? true : false)
                   } else {
                         AndroidToastEle('请求失败！')
                         console.log('message: ', message)

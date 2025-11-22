@@ -28,12 +28,11 @@ function App() {
 
 
 
-  // useEffect(() => {
-  //   console.log('相关数据', WINDOW_WIDTH,
-  //     WINDOW_HEIGHT,
-  //     STATUS_BAR_HEIGHT)
-
-  // }, [])
+  useEffect(() => {
+    // console.log('相关数据', WINDOW_WIDTH,
+    //   WINDOW_HEIGHT,
+    //   STATUS_BAR_HEIGHT)
+  }, [])
 
   return (
     <View style={styles.container}>
