@@ -69,7 +69,6 @@ const styles = StyleSheet.create({
       },
       delBtn: {
             backgroundColor: '#E56D57',
-
       },
       rightActionsText: {
             color: 'white'

@@ -247,10 +247,11 @@ export default function TypeManagement() {
                   onChangeText={setSearchVal}
                   value={searchVal}
                   showLoading={showLoading}
-                  onKeyPress={({ nativeEvent: { key } }) => {
-                        if ('Enter' === key) {
-                              handleSearch()
-                        }
+                  returnKeyType='search'
+                  returnKeyLabel="搜索"
+                  onSubmitEditing={(e) => {
+                        // console.log('点击了按钮', e.persist())
+                        handleSearch()
                   }}
 
             ></SearchBar>
@@ -319,13 +320,13 @@ export default function TypeManagement() {
                   onClose={() => setOpenSpeedDial(!openSpeedDial)}
             >
                   <SpeedDial.Action
-                        icon={(): () => IconNode => {
-                              return <AntDesignIcon
+                        icon={
+                              <AntDesignIcon
                                     name='plus'
                                     size={20}
                                     color='#fff'
                               />
-                        }}
+                        }
                         color={basicBackgroundColor}
                         title='新增'
                         onPress={() => {
@@ -334,13 +335,13 @@ export default function TypeManagement() {
 
                   />
                   <SpeedDial.Action
-                        icon={(): () => IconNode => {
-                              return <AntDesignIcon
+                        icon={
+                              <AntDesignIcon
                                     name='appstore-o'
                                     size={20}
                                     color='#fff'
                               />
-                        }}
+                        }
                         color={basicBackgroundColor}
                         title={`切换成${'type' === curListType ? '物品' : '分类'}`}
                         onPress={() => {
@@ -362,7 +363,6 @@ export default function TypeManagement() {
                         }}
 
                   />
-
             </SpeedDial>
 
             {/* 弹窗 -- 新增、编辑  */}
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
       listItem: {
             height: 168,
             padding: 10,
-            borderBottomColor: 'tomato',
+            borderBottomColor: '#75ABD1',
             borderBottomWidth: StyleSheet.hairlineWidth,
             // justifyContent: 'flex-start',
             // alignItems: 'center'

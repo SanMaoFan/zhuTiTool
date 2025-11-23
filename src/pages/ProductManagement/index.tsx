@@ -77,12 +77,12 @@ export default function Home({ navigation }) {
 
       // function
       // 初始化页面获取数据
-      function initPageData(){
+      function initPageData() {
             getTypeListFn(function (list) {
-                  const {typeId = void 0} = list?.[0]
+                  const { typeId = void 0 } = list?.[0]
                   setProductPage(1)
                   setCurTypeId(list?.[0]?.typeId)
-                  typeId ? getProudctListFn({ parentId: typeId }): setIsEmptyList(true)
+                  typeId ? getProudctListFn({ parentId: typeId }) : setIsEmptyList(true)
             })
       }
 
@@ -201,15 +201,15 @@ export default function Home({ navigation }) {
       function resetRequestCurData(submitData: any, isAddType: boolean) {
             setCurDialogType("")
             // 是否新增了分类
-            if(isAddType){
+            if (isAddType) {
                   setShowModal(false)
                   initPageData()
-            }else if (curTypeId === submitData.parentId) {
+            } else if (curTypeId === submitData.parentId) {
                   // 更新当前分类下的物品数据
                   setShowModal(false)
                   setProductPage(1)
                   getProudctListFn({ parentId: curTypeId })
-            } else{
+            } else {
                   // 不请求
                   resetDialog()
             }
@@ -246,7 +246,7 @@ export default function Home({ navigation }) {
 
       return (
             <View style={styles.container}>
-                  
+
                   {/* 路由跳转 */}
                   {/* <Button title="点击" onPress={() => navigation.navigate('User')} /> */}
 
@@ -373,26 +373,26 @@ export default function Home({ navigation }) {
                         onClose={() => setOpenSpeedDial(!openSpeedDial)}
                   >
                         <SpeedDial.Action
-                              icon={(): () => IconNode => {
-                                    return <AntDesignIcon
+                              icon={
+                                    <AntDesignIcon
                                           name='plus'
                                           size={20}
                                           color='#fff'
                                     />
-                              }}
+                              }
                               color={basicBackgroundColor}
                               title='新增'
                               onPress={() => setDialog('add', '')}
 
                         />
                         <SpeedDial.Action
-                              icon={(): () => IconNode => {
-                                    return <AntDesignIcon
+                              icon={
+                                    <AntDesignIcon
                                           name='appstore-o'
                                           size={20}
                                           color='#fff'
                                     />
-                              }}
+                              }
                               color={basicBackgroundColor}
                               title='分类与物品'
                               onPress={() => {
