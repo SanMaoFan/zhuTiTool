@@ -12,6 +12,8 @@ import CustomStatusBarEle from '@/components/CustomStatusBarEle'
 
 import ProductManagementRouter from '../ProductManagementRouter'
 import User from '../User'
+import { ScreenHeight } from '@rneui/base'
+import { basicBackgroundColor } from '@/common/styles'
 
 
 export default function HomeBottomTab() {
@@ -19,13 +21,13 @@ export default function HomeBottomTab() {
       // 共用数据
       // 导航底部文字设置
       const tabBarLabelStylePublish = {
-            fontSize: 16,
+            fontSize: 14,
             fontFamily: 'Georgia',
             fontWeight: 300,
       }
       // 导航图标设置
       const tabBarIconStyle = {
-            fontSize: 20,
+            fontSize: 24,
 
       }
       // 图标未选中颜色
@@ -47,7 +49,7 @@ export default function HomeBottomTab() {
                         },
                         tabBarIconStyle: tabBarIconStyle,
                         tabBarActiveTintColor: activeIconColor,
-                        headerShown: false
+                        headerShown: false,
                   }
             }, {
                   name: "User",
@@ -60,7 +62,7 @@ export default function HomeBottomTab() {
                         },
                         tabBarIconStyle: tabBarIconStyle,
                         tabBarActiveTintColor: activeIconColor,
-                        headerShown: false
+                        headerShown: false,
                   }
             }
       ]
@@ -70,7 +72,13 @@ export default function HomeBottomTab() {
       const BottomTabNavigationCom = createBottomTabNavigator()
 
       return <View style={styles.container}>
-            <BottomTabNavigationCom.Navigator initialRouteName='ProductManagementRouter'>
+            <BottomTabNavigationCom.Navigator initialRouteName='ProductManagementRouter'
+                  screenOptions={{
+                        animation: 'fade',
+                        tabBarHideOnKeyboard: true
+                  }}
+                  
+            >
                   {
                         tabBarRenderData.map(item => {
                               return <BottomTabNavigationCom.Screen {...item} key={item.name} />
