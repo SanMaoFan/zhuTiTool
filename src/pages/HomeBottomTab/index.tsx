@@ -70,8 +70,6 @@ export default function HomeBottomTab() {
       const BottomTabNavigationCom = createBottomTabNavigator()
 
       return <View style={styles.container}>
-            {/* 顶部导航栏 */}
-                  <CustomStatusBarEle />
             <BottomTabNavigationCom.Navigator initialRouteName='ProductManagementRouter'>
                   {
                         tabBarRenderData.map(item => {

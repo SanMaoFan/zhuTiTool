@@ -36,22 +36,21 @@ function App() {
 
   return (
     <View style={styles.container}>
-      {/* <CustomStatusBarEle/> */}
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
+      {/* 顶部导航栏 -- 还需要设置展示内容的高度，不然其内容实际上占满了整屏高度 */}
+      <CustomStatusBarEle />
 
 
-      {/* <Text style={{ backgroundColor: 'red' }}>测试文字</Text> */}
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName='HomeBottomTab'>
-          <Stack.Screen component={LoginPage} name="LoginPage" options={{headerShown: false}}></Stack.Screen>
-          <Stack.Screen component={HomeBottomTab} name='HomeBottomTab' options={{ headerShown: false }} />
-          {/* <Stack.Screen component={Home} name='Home' options={{ title: 'Home' }} /> */}
-          {/* <Stack.Screen component={User} name='User' options={{ title: 'User' }} /> */}
-        </Stack.Navigator>
+      <View style={styles.routerContainer}>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName='HomeBottomTab'>
+            <Stack.Screen component={LoginPage} name="LoginPage" options={{ headerShown: false }}></Stack.Screen>
+            <Stack.Screen component={HomeBottomTab} name='HomeBottomTab' options={{ headerShown: false }} />
+            {/* <Stack.Screen component={Home} name='Home' options={{ title: 'Home' }} /> */}
+            {/* <Stack.Screen component={User} name='User' options={{ title: 'User' }} /> */}
+          </Stack.Navigator>
 
-      </NavigationContainer>
-
+        </NavigationContainer>
+      </View>
     </View>
 
   );
@@ -61,6 +60,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  routerContainer: {
+    flex: 1,
+    paddingTop: 32
+  }
 });
 
 export default App;
