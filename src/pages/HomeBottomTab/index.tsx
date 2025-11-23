@@ -76,7 +76,6 @@ export default function HomeBottomTab() {
                               return <BottomTabNavigationCom.Screen {...item} key={item.name} />
                         })
                   }
-
             </BottomTabNavigationCom.Navigator>
       </View>
 }

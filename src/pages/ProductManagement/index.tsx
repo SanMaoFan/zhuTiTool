@@ -40,17 +40,7 @@ import { type TypeInterface, type ProductInterface } from '@/utils'
 
 
 
-
-/**
- * 开发计划
- * - 完成列表中下拉、上拉刷新功能
- * - 完善列表删除功能（删除后，怎么恢复数据共条数和分页的关系？）
- * - 从分类与物品模块出来后，需要重新查询内容
- */
-
 export default function Home({ navigation }) {
-
-
       // 是否显示loading
       const [showLoading, setShowLoading] = useState(false)
       // 列表顶部下拉刷新的状态
@@ -85,15 +75,14 @@ export default function Home({ navigation }) {
       // 当前删除的物品 id
       const [curEditId, setCurEditId] = useState<string>('')
 
-
-
       // function
       // 初始化页面获取数据
       function initPageData(){
             getTypeListFn(function (list) {
+                  const {typeId = void 0} = list?.[0]
                   setProductPage(1)
                   setCurTypeId(list?.[0]?.typeId)
-                  getProudctListFn({ parentId: list?.[0]?.typeId })
+                  typeId ? getProudctListFn({ parentId: typeId }): setIsEmptyList(true)
             })
       }
 
@@ -431,7 +420,6 @@ export default function Home({ navigation }) {
 
                         </Dialog.Actions>
                   </Dialog>
-
             </View>
       )
 
@@ -445,7 +433,7 @@ const styles = StyleSheet.create({
       },
       assortContainer: {
             width: WINDOW_WIDTH * (3 / 11),
-            borderRightColor: 'gray',
+            borderRightColor: '#75ABD1',
             borderRightWidth: StyleSheet.hairlineWidth
       },
       assortItem: {
@@ -459,10 +447,10 @@ const styles = StyleSheet.create({
             fontSize: 16,
             color: 'white',
             borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: 'gray'
+            borderBottomColor: '#75ABD1'
       },
       assortItemActive: {
-            backgroundColor: '#75ABD1',
+            backgroundColor: '#75ABD1'
       },
       typeName: {
             fontSize: 24,
@@ -477,9 +465,9 @@ const styles = StyleSheet.create({
             overflow: 'hidden'
       },
       productItem: {
-            height: 126,
+            height: 125,
             padding: 10,
-            borderBottomColor: 'tomato',
+            borderBottomColor: '#75ABD1',
             borderBottomWidth: StyleSheet.hairlineWidth,
             // justifyContent: 'flex-start',
             // alignItems: 'center'

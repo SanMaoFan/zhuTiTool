@@ -15,7 +15,7 @@ import User from '@/pages/User'
 import CustomStatusBarEle from '@/components/CustomStatusBarEle'
 
 // data
-import { STATUS_BAR_HEIGHT } from './src/utils'
+import { WINDOW_HEIGHT, STATUS_BAR_HEIGHT } from './src/utils'
 
 function App() {
 
@@ -29,7 +29,8 @@ function App() {
 
 
   useEffect(() => {
-    // console.log('相关数据', WINDOW_WIDTH,
+    // console.log('相关数据',
+    //   WINDOW_WIDTH,
     //   WINDOW_HEIGHT,
     //   STATUS_BAR_HEIGHT)
   }, [])
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
   },
   routerContainer: {
     flex: 1,
-    paddingTop: 32
+    paddingTop:  STATUS_BAR_HEIGHT
   }
 });
 
