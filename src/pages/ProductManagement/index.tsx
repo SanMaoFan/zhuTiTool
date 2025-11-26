@@ -25,7 +25,7 @@ import { basicBackgroundColor } from '@/common/styles'
 import {
       WINDOW_WIDTH,
       WINDOW_HEIGHT
-} from '../../utils'
+} from '@/utils'
 // import {
 
 // } from './js/data'
@@ -36,7 +36,7 @@ import { getTypeList } from '@/api/type'
 import { getProductList, delProductItem } from '@/api/product'
 
 // interface 
-import { type TypeInterface, type ProductInterface } from '@/utils'
+import { type TypeInterface, type ProductInterface } from '@/utils/types'
 
 
 

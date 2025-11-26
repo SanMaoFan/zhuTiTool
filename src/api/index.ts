@@ -1,6 +1,10 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios"
+
+
+import axios, { AxiosRequestConfig, AxiosResponse, type CancelTokenSource, type InternalAxiosRequestConfig } from "axios"
 // utils
 import Storage from '@/utils/storage'
+import { resetLoginHandle, simpleUUID } from '@/utils'
+
 
 
 // 创建实例
@@ -10,15 +14,25 @@ const axiosInterface = axios.create({
     responseType: "json"
 })
 
+const CancelToken = axios.CancelToken
+// 请求收集器
+const cancelTokensMap: any = new Map()
+
 // 拦截器
 // 请求前
-axiosInterface.interceptors.request.use(async (config) => {
+axiosInterface.interceptors.request.use(async (config: InternalAxiosRequestConfig<any> & { [key: string]: any }) => {
     // 设置 token
     const token = await Storage.get('token')
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
     }
-    // console.log('config', config)
+
+    const source = CancelToken.source()
+    // 获取 UUID 
+    const UUID = simpleUUID()
+    config.UUID = UUID
+    config.cancelToken = source.token
+    cancelTokensMap.set(UUID, source)
     return config
 }, (err) => {
     console.log('request before error: ', err)
@@ -28,14 +42,17 @@ axiosInterface.interceptors.request.use(async (config) => {
 
 // 请求后
 axiosInterface.interceptors.response.use((res) => {
-    // console.log('请求的内容', res)
     const { data } = res
     const { status } = data
     if (401 === status) {
-        
+        // 取消所有请求
+        cancelTokensMap.forEach((source: CancelTokenSource) => source.cancel("所有请求取消"))
+        // 跳转登录页并提示 token 失效
+        resetLoginHandle()
     } else {
-        return res.data
+        cancelTokensMap.delete(res.config.UUID)
     }
+    return res.data
 }, (err) => {
     console.log("response after error:", err)
     return Promise.reject(err)

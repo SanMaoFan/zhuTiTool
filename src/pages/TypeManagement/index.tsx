@@ -16,11 +16,12 @@ import AndroidToastEle from '@/components/CustomAndroidToastEle'
 import { getTypeList, delTypeItem } from '@/api/type'
 import { getProductList, delProductItem } from '@/api/product'
 
+
 // style
 import commonStyles, { basicBackgroundColor } from '@/common/styles'
 
 // interface
-import { type TypeInterface, type ProductInterface } from '@/utils'
+import { type TypeInterface, type ProductInterface } from '@/utils/types'
 
 
 /**
@@ -33,7 +34,7 @@ export default function TypeManagement() {
 
       // ref
       const JSearchBar = useRef(null)
-      let JFlatList = useRef<ReactNode>()
+      let JFlatList = useRef<ReactNode>(null)
 
       // state
       // 搜索词
@@ -258,7 +259,9 @@ export default function TypeManagement() {
             {/* 列表 */}
             <SafeAreaView style={styles.listContainer}>
                   <FlatList
-                        ref={(flatList) => { JFlatList = flatList }}
+                        ref={(flatList) => {
+                              flatList && (JFlatList = flatList)
+                        }}
                         renderItem={({ item }) => {
                               // console.log('数据', info)
                               return <HandleRootView
@@ -346,7 +349,7 @@ export default function TypeManagement() {
                         title={`切换成${'type' === curListType ? '物品' : '分类'}`}
                         onPress={() => {
                               setCurListType(type => {
-                                    JFlatList?.scrollToIndex({
+                                    listData.length > 0 && JFlatList && JFlatList?.scrollToIndex({
                                           index: 0,
                                           animate: true,
                                           viewOffset: 0,

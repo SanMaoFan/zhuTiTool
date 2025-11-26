@@ -50,7 +50,7 @@ class Storage {
    * @param {string} key
    * @returns {Promise}
    */
-  public delete(key: string) {
+  public delete(key?: string) {
     if (null == key) {
       // 如果没有 key，则一次性清空数据
       return AsyncStorage.clear();
